@@ -34,6 +34,8 @@ namespace vke {
             VkePipeline(const VkePipeline&) = delete;
             void operator = (const VkePipeline&) = delete;
 
+            void bind(VkCommandBuffer commandBuffer);
+
             std::vector<char> readFile(const std::string& filePath);
             static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
         private:

@@ -32,6 +32,6 @@ namespace vke{
             VkeSwapChain vkeSwapChain{vkeDevice, vkeWindow.getExtent()};
             std::unique_ptr<VkePipeline> vkePipeline;
             VkPipelineLayout pipelineLayout;
-            std::vector<VkCommandBuffer> commandBuffer;
+            std::vector<VkCommandBuffer> commandBuffers;
     };
 } // namespace vke
