@@ -57,6 +57,7 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "cassert": "cpp"
     }
 }

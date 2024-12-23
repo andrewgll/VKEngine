@@ -1,5 +1,7 @@
 #include "pipeline.hpp"
 
+#include "model.hpp" 
+
 #include <fstream>
 #include <stdexcept> 
 #include <iostream>
@@ -66,12 +68,15 @@ namespace vke {
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
+        auto bindingDescriptions = VkeModel::Vertex::getBindingDescriptions();
+        auto attributeDescriptions = VkeModel::Vertex::getAttributeDescriptions();
+        
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
         VkPipelineViewportStateCreateInfo viewportInfo{};
         viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -177,6 +182,19 @@ namespace vke {
         configInfo.colorBlendInfo.blendConstants[1] = 0.0f;                         // Optional
         configInfo.colorBlendInfo.blendConstants[2] = 0.0f;                       // Optional
         configInfo.colorBlendInfo.blendConstants[3] = 0.0f;                        // Optional
+
+        configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        configInfo.depthStencilInfo.pNext = nullptr;
+        configInfo.depthStencilInfo.flags = 0;
+        configInfo.depthStencilInfo.depthTestEnable = VK_FALSE;  // Disable depth testing
+        configInfo.depthStencilInfo.depthWriteEnable = VK_FALSE; // Disable depth writes
+        configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+        configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+        configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
+        configInfo.depthStencilInfo.front = {};
+        configInfo.depthStencilInfo.back = {};
+        configInfo.depthStencilInfo.minDepthBounds = 0.0f; // Optional
+        configInfo.depthStencilInfo.maxDepthBounds = 1.0f; // Optional
 
         return configInfo;
     }

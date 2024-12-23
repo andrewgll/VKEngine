@@ -6,6 +6,7 @@
 
 namespace vke{
     App::App(){
+        loadModels();
         createPipelineLayout();
         createPipeline();
         createCommandBuffers();
@@ -19,6 +20,37 @@ namespace vke{
             drawFrame();
         }
         vkDeviceWaitIdle(vkeDevice.device());
+    }
+    
+    void App::sierpinski(std::vector<VkeModel::Vertex> &vertices, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top){
+        if (depth <= 0) {
+            vertices.push_back({top});
+            vertices.push_back({right});
+            vertices.push_back({left});
+        } else {
+            auto leftTop = 0.5f * (left + top);
+            auto rightTop = 0.5f * (right + top);
+            auto leftRight = 0.5f * (left + right);
+            sierpinski(vertices, depth - 1, left, leftRight, leftTop);
+            sierpinski(vertices, depth - 1, leftRight, right, rightTop);
+            sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+        }
+    }
+
+    void App::loadModels() {
+        // std::vector<VkeModel::Vertex> vertices{
+        //     {{0.0f, -0.5f}},
+        //     {{0.5f, 0.5f}},
+        //     {{-0.5f, 0.5f}},
+        // };
+        // std::vector<VkeModel::Vertex> vertices{};
+        // sierpinski(vertices, 3, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
+        std::vector<VkeModel::Vertex> vertices{
+            {{0.0f, -0.5f}, {1.0f, 0.0, 0.0}},
+            {{-0.5f, 0.5f}, {0.0, 1.0f, 0.0}},
+            {{0.5f, 0.5f}, {0.0, 0.0, 1.0f}},
+        };
+        vkeModel = std::make_unique<VkeModel>(vkeDevice, vertices);
     }
 
     void App::createPipelineLayout(){
@@ -83,7 +115,8 @@ namespace vke{
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
             vkePipeline->bind(commandBuffers[i]);
-            vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+            vkeModel->bind(commandBuffers[i]);
+            vkeModel->draw(commandBuffers[i]);
 
             vkCmdEndRenderPass(commandBuffers[i]);
             if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS){
