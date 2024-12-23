@@ -1,10 +1,19 @@
 #include "app.hpp"
 
+//libs
+#define GLM_FORCE_RADIANT
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
 //std
 #include <stdexcept>
 #include <array>
 
 namespace vke{
+    struct SimplePushConstantData{
+        glm::vec2 offset;
+        alignas(16) glm::vec3 color;
+    };
     App::App(){
         loadModels();
         createPipelineLayout();
@@ -54,12 +63,19 @@ namespace vke{
     }
 
     void App::createPipelineLayout(){
+        
+        VkPushConstantRange pushConstantRange{};
+
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(SimplePushConstantData);
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pSetLayouts = nullptr;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         if(vkCreatePipelineLayout(vkeDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS){
             throw std::runtime_error("failed to create pipeline layout");
         }
@@ -102,48 +118,65 @@ namespace vke{
         commandBuffers.clear();
     }
     void App::recordCommandBuffer(int imageIndex){
+        static int frame = 30;
+        frame = (frame + 1) % 100;
+
         VkCommandBufferBeginInfo beginInfo{};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-            if(vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS){
-                throw std::runtime_error("failed to begin rendering command buffer");
-            }
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-            VkRenderPassBeginInfo renderPassInfo{};
-            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = vkeSwapChain->getRenderPass();
-            renderPassInfo.framebuffer = vkeSwapChain->getFrameBuffer(imageIndex);
+        if(vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS){
+            throw std::runtime_error("failed to begin rendering command buffer");
+        }
 
-            renderPassInfo.renderArea.offset = {0,0};
-            renderPassInfo.renderArea.extent = vkeSwapChain->getSwapChainExtent();
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = vkeSwapChain->getRenderPass();
+        renderPassInfo.framebuffer = vkeSwapChain->getFrameBuffer(imageIndex);
 
-            std::array<VkClearValue, 2> clearValues{};
-            clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-            clearValues[1].depthStencil = {1.0f, 0};
-            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-            renderPassInfo.pClearValues = clearValues.data();
+        renderPassInfo.renderArea.offset = {0,0};
+        renderPassInfo.renderArea.extent = vkeSwapChain->getSwapChainExtent();
 
-            vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f};
+        clearValues[1].depthStencil = {1.0f, 0};
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(vkeSwapChain->getSwapChainExtent().width);
-            viewport.height = static_cast<float>(vkeSwapChain->getSwapChainExtent().height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};
-            vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
-            vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+        vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            vkePipeline->bind(commandBuffers[imageIndex]);
-            vkeModel->bind(commandBuffers[imageIndex]);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(vkeSwapChain->getSwapChainExtent().width);
+        viewport.height = static_cast<float>(vkeSwapChain->getSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};
+        vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+        vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
+        vkePipeline->bind(commandBuffers[imageIndex]);
+        vkeModel->bind(commandBuffers[imageIndex]);
+
+        for(int j = 0; j < 4; j++){
+            SimplePushConstantData push{};
+            push.offset = {-0.5f + frame * 0.002f, -0.4f + j * 0.25f};
+            push.color = {0.0f, 0.0f, 0.2f + 0.2f *j};
+
+            vkCmdPushConstants(commandBuffers[imageIndex], 
+                pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+                0, 
+                sizeof(SimplePushConstantData), 
+                &push);
             vkeModel->draw(commandBuffers[imageIndex]);
+        }
 
-            vkCmdEndRenderPass(commandBuffers[imageIndex]);
-            if(vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS){
-                throw std::runtime_error("failed to record command buffer");
-            }
+        vkCmdEndRenderPass(commandBuffers[imageIndex]);
+        if(vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS){
+            throw std::runtime_error("failed to record command buffer");
+        }
     }
 
     void App::drawFrame() {
