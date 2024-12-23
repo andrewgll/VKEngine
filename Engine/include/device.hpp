@@ -36,7 +36,7 @@ class VkeDevice {
 
   // Not copyable or movable
   VkeDevice(const VkeDevice &) = delete;
-  void operator=(const VkeDevice &) = delete;
+  VkeDevice operator=(const VkeDevice &) = delete;
   VkeDevice(VkeDevice &&) = delete;
   VkeDevice &operator=(VkeDevice &&) = delete;
 

@@ -27,12 +27,17 @@ namespace vke{
             void createPipelineLayout();
             void createPipeline();
             void createCommandBuffers();
+            void freeCommandBuffers();
             void drawFrame();
+            void recreateSwapChain();
+            void recordCommandBuffer(int imageIndex);
+
             void sierpinski(std::vector<VkeModel::Vertex> &vertices, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top);
+
 
             VkeWindow vkeWindow{WIDTH, HEIGHT, "PIZDEC"};
             VkeDevice vkeDevice{vkeWindow};
-            VkeSwapChain vkeSwapChain{vkeDevice, vkeWindow.getExtent()};
+            std::unique_ptr<VkeSwapChain> vkeSwapChain;
             std::unique_ptr<VkePipeline> vkePipeline;
             VkPipelineLayout pipelineLayout;
             std::vector<VkCommandBuffer> commandBuffers;

@@ -58,6 +58,7 @@
         "vector": "cpp",
         "algorithm": "cpp",
         "fstream": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "__config": "cpp"
     }
 }
