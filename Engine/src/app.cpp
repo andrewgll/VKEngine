@@ -1,62 +1,45 @@
 #include "app.hpp"
 
-//libs
+#include "render_system.hpp"
+
+// libs
 #define GLM_FORCE_RADIANT
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
-//std
+// std
 #include <stdexcept>
 #include <array>
 
-namespace vke{
-    struct SimplePushConstantData{
-        glm::mat2 transform{1.f};
-        glm::vec2 offset;
-        alignas(16) glm::vec3 color;
-
-    };
-    App::App(){
+namespace vke
+{
+    App::App()
+    {
         loadGameObjects();
-        createPipelineLayout();
-        recreateSwapChain();
-        createCommandBuffers();
     }
-    App::~App(){
-        vkDestroyPipelineLayout(vkeDevice.device(), pipelineLayout, nullptr);
-     }
-    void App::run() {
-        while(!vkeWindow.shouldClose()){
+    App::~App()
+    {
+    }
+    void App::run()
+    {
+        RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
+        while (!vkeWindow.shouldClose())
+        {
             glfwPollEvents();
-            drawFrame();
-        }
-        vkDeviceWaitIdle(vkeDevice.device());
-    }
-    
-    void App::sierpinski(std::vector<VkeModel::Vertex> &vertices, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top){
-        if (depth <= 0) {
-            vertices.push_back({top});
-            vertices.push_back({right});
-            vertices.push_back({left});
-        } else {
-            auto leftTop = 0.5f * (left + top);
-            auto rightTop = 0.5f * (right + top);
-            auto leftRight = 0.5f * (left + right);
-            sierpinski(vertices, depth - 1, left, leftRight, leftTop);
-            sierpinski(vertices, depth - 1, leftRight, right, rightTop);
-            sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+            if (auto commandBuffer = vkeRenderer.beginFrame())
+            {
+                vkeRenderer.beginSwapChainRenderPass(commandBuffer);
+                renderSystem.renderGameObjects(commandBuffer, gameObjects);
+                vkeRenderer.endSwapChainRenderPass(commandBuffer);
+                vkeRenderer.endFrame();
+            }
+            vkDeviceWaitIdle(vkeDevice.device());
         }
     }
 
-    void App::loadGameObjects() {
-        // std::vector<VkeModel::Vertex> vertices{
-        //     {{0.0f, -0.5f}},
-        //     {{0.5f, 0.5f}},
-        //     {{-0.5f, 0.5f}},
-        // };
-        // std::vector<VkeModel::Vertex> vertices{};
-        // sierpinski(vertices, 3, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
+    void App::loadGameObjects()
+    {
         std::vector<VkeModel::Vertex> vertices{
             {{0.0f, -0.5f}, {1.0f, 0.0, 0.0}},
             {{-0.5f, 0.5f}, {0.0, 1.0f, 0.0}},
@@ -64,184 +47,25 @@ namespace vke{
         };
         auto vkeModel = std::make_shared<VkeModel>(vkeDevice, vertices);
 
-        auto triangle = VkeGameObject::createGameObject();
-        triangle.model = vkeModel;
-        triangle.color = {.1f, .8f, .1f};
-        triangle.transform2d.translation.x = .2f;
-        triangle.transform2d.scale = {2.f, .5f};
-        triangle.transform2d.rotation = .25f * glm::two_pi<float>();
+        std::vector<glm::vec3> colors = {
+            {43.0f / 255.0f, 138.0f / 255.0f, 160.0f / 255.0f},
+            {151.0f / 255.0f, 200.0f / 255.0f, 200.0f / 255.0f},
+            {160.0f / 255.0f, 201.0f / 255.0f, 211.0f / 255.0f},
+            {94.0f / 255.0f, 128.0f / 255.0f, 117.0f / 255.0f},
+        };
 
-        gameObjects.push_back(std::move(triangle));
-    }
-
-    void App::createPipelineLayout(){
-        
-        VkPushConstantRange pushConstantRange{};
-
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
-        pipelineLayoutInfo.pushConstantRangeCount = 1;
-        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-        if(vkCreatePipelineLayout(vkeDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS){
-            throw std::runtime_error("failed to create pipeline layout");
+        for (auto &color : colors)
+        {
+            color = glm::pow(color, glm::vec3{2.2f});
+        }
+        for (int i = 0; i < 100; i++)
+        {
+            auto triangle = VkeGameObject::createGameObject();
+            triangle.model = vkeModel;
+            triangle.transform2d.scale = glm::vec2(.5f) - i * 0.0025f;
+            triangle.transform2d.rotation = i * glm::pi<float>() * .0025f;
+            triangle.color = colors[i % colors.size()];
+            gameObjects.push_back(std::move(triangle));
         }
     }
-
-    void App::createPipeline(){
-        assert(vkeSwapChain != nullptr && "Cannot create pipeline before swap chain");
-        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline laout");
-
-        PipelineConfigInfo pipelineConfig {};
-        VkePipeline::defaultPipelineConfigInfo(pipelineConfig );
-        pipelineConfig.renderPass = vkeSwapChain->getRenderPass(); 
-        pipelineConfig.pipelineLayout = pipelineLayout;
-        vkePipeline = std::make_unique<VkePipeline>(
-            vkeDevice,
-            "Engine/shaders/shader.vert.spv",
-            "Engine/shaders/shader.frag.spv",
-            pipelineConfig
-        );
-    }
-
-    void App::createCommandBuffers() {
-        commandBuffers.resize(vkeSwapChain->imageCount());
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = vkeDevice.getCommandPool();
-        allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-
-        if(vkAllocateCommandBuffers(vkeDevice.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS){
-            throw std::runtime_error("failed to allocate command buffer");
-        }
-
-         
-    }
-
-    void App::freeCommandBuffers() {
-        vkFreeCommandBuffers(vkeDevice.device(), vkeDevice.getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        commandBuffers.clear();
-    }
-    void App::recordCommandBuffer(int imageIndex){
-
-        VkCommandBufferBeginInfo beginInfo{};
-
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if(vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS){
-            throw std::runtime_error("failed to begin rendering command buffer");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = vkeSwapChain->getRenderPass();
-        renderPassInfo.framebuffer = vkeSwapChain->getFrameBuffer(imageIndex);
-
-        renderPassInfo.renderArea.offset = {0,0};
-        renderPassInfo.renderArea.extent = vkeSwapChain->getSwapChainExtent();
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f};
-        clearValues[1].depthStencil = {1.0f, 0};
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(vkeSwapChain->getSwapChainExtent().width);
-        viewport.height = static_cast<float>(vkeSwapChain->getSwapChainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};
-        vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
-        vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
-
-        renderGameObjects(commandBuffers[imageIndex]);
-
-        vkCmdEndRenderPass(commandBuffers[imageIndex]);
-        if(vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS){
-            throw std::runtime_error("failed to record command buffer");
-        }
-    }
-
-    void App::renderGameObjects(VkCommandBuffer commandBuffer){
-        vkePipeline->bind(commandBuffer);
-
-        for(auto& obj : gameObjects){
-            obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
-            SimplePushConstantData push{};
-            push.offset = obj.transform2d.translation;
-            push.color = obj.color;
-            push.transform = obj.transform2d.mat2();
-
-            vkCmdPushConstants(
-                commandBuffer,
-                pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
-                0, 
-                sizeof(SimplePushConstantData), 
-                &push);
-            obj.model->bind(commandBuffer);
-            obj.model->draw(commandBuffer);
-        }
-    }
-
-    void App::drawFrame() {
-        uint32_t imageIndex;
-        auto result = vkeSwapChain->acquireNextImage(&imageIndex);
-
-        if(result == VK_ERROR_OUT_OF_DATE_KHR){
-            recreateSwapChain();
-            return;
-        }
-
-        if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("falied to acquire swap chain image");
-        }
-        recordCommandBuffer(imageIndex);
-        result = vkeSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
-        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || vkeWindow.wasWindowResized()){
-            vkeWindow.resetWindowResizedFlag();
-            recreateSwapChain();
-            return;
-        }
-        if(result != VK_SUCCESS){
-            throw std::runtime_error("failed to present swap chain image");
-        }
-
-    }
-
-    void App::recreateSwapChain() {
-        vkDeviceWaitIdle(vkeDevice.device());
-        auto extent = vkeWindow.getExtent();
-        while (extent.width == 0 || extent.height == 0) {
-            extent = vkeWindow.getExtent();
-            glfwWaitEvents();
-        }
-        vkDeviceWaitIdle(vkeDevice.device());
-
-
-        if(vkeSwapChain == nullptr){
-            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent);
-        }
-        else{
-            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent, std::move(vkeSwapChain));
-            if(vkeSwapChain->imageCount() != commandBuffers.size()){
-                freeCommandBuffers();
-                createCommandBuffers();
-            }
-        }
-        createPipeline();
-    }
-
 }

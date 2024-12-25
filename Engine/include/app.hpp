@@ -1,48 +1,35 @@
 #pragma once
 
 #include "window.hpp"
-#include "pipeline.hpp"
 #include "game_object.hpp"
 #include "device.hpp"
-#include "swap_chain.hpp"
-#include "model.hpp"
-
-//std
-#include <memory>  
+#include "renderer.hpp"
+// std
+#include <memory>
 #include <vector>
 
-namespace vke{
-    class App{
-        public:
-            static constexpr int WIDTH = 800;
-            static constexpr int HEIGHT = 600;
-            
-            App();
-            ~App();
+namespace vke
+{
+    class App
+    {
+    public:
+        static constexpr int WIDTH = 800;
+        static constexpr int HEIGHT = 600;
 
-            App(const App &) = delete;
-            App &operator = (const App &) = delete;
-            void run(); 
-        private:
-            void loadGameObjects();
-            void createPipelineLayout();
-            void createPipeline();
-            void createCommandBuffers();
-            void freeCommandBuffers();
-            void drawFrame();
-            void recreateSwapChain();
-            void recordCommandBuffer(int imageIndex);
-            void renderGameObjects(VkCommandBuffer commandBuffer);
+        App();
+        ~App();
 
-            void sierpinski(std::vector<VkeModel::Vertex> &vertices, int depth, glm::vec2 left, glm::vec2 right, glm::vec2 top);
+        App(const App &) = delete;
+        App &operator=(const App &) = delete;
+        void run();
+
+    private:
+        void loadGameObjects();
 
 
-            VkeWindow vkeWindow{WIDTH, HEIGHT, "PIZDEC"};
-            VkeDevice vkeDevice{vkeWindow};
-            std::unique_ptr<VkeSwapChain> vkeSwapChain;
-            std::unique_ptr<VkePipeline> vkePipeline;
-            VkPipelineLayout pipelineLayout;
-            std::vector<VkCommandBuffer> commandBuffers;
-            std::vector<VkeGameObject> gameObjects;
+        VkeWindow vkeWindow{WIDTH, HEIGHT, "PIZDEC"};
+        VkeDevice vkeDevice{vkeWindow};
+        VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
+        std::vector<VkeGameObject> gameObjects;
     };
 } // namespace vke
