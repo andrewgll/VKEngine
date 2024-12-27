@@ -2,9 +2,15 @@ Hi. This is my attempt to learn Vulkan and write my own engine from scratch.
 
 So far these are my milestones:
 
-* Resizable window.
-*  Rainbow triangular.
-*  My first triangular in VK.
-*  Command buffer created.
-*  Fixed compatability issues with MacOS.
-*  Vk Instance created, device, logical device, render pass, swapchain initialized. 
+### 0.1 finally 3D.
+![VK](https://imgur.com/scv0M3L)
+
+### 0.09 Refactored everything.
+### 0.08 Render system.
+### 0.07 2D Transformations.
+### 0.06 Resizable window.
+### 0.05 Rainbow triangular.
+### 0.04 First triangular in VK.
+### 0.03 Command buffer created.
+### 0.02 Fixed compatability issues with MacOS.
+### 0.01 Vk Instance created, device, logical device, render pass, swapchain initialized. 

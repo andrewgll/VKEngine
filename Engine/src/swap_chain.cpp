@@ -11,7 +11,6 @@
 
 namespace vke
 {
-
   VkeSwapChain::VkeSwapChain(VkeDevice &deviceRef, VkExtent2D extent)
       : device{deviceRef}, windowExtent{extent}
   {
@@ -470,5 +469,4 @@ namespace vke
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
-
 } // namespace vke
