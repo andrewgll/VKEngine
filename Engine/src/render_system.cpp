@@ -63,7 +63,7 @@ namespace vke
             pipelineConfig);
     }
 
-    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkeGameObject> &gameObjects)
+    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkeGameObject> &gameObjects, const VkeCamera &camera)
     {
         // render
         vkePipeline->bind(commandBuffer);
@@ -75,7 +75,7 @@ namespace vke
 
             SimplePushConstantData push{};
             push.color = obj.color;
-            push.transform = obj.transform.mat4();
+            push.transform = camera.getProjection() * obj.transform.mat4();
 
             vkCmdPushConstants(
                 commandBuffer,

@@ -1,5 +1,6 @@
 #include "app.hpp"
 
+#include "camera.hpp"
 #include "render_system.hpp"
 
 // libs
@@ -24,13 +25,18 @@ namespace vke
     void App::run()
     {
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
+        VkeCamera camera{};
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
+
+            float aspect = vkeRenderer.getAspectRatio();
+            // camera.setOrthographicProjection(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects);
+                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -105,7 +111,7 @@ namespace vke
         auto cube = VkeGameObject::createGameObject();
 
         cube.model = cubeModel;
-        cube.transform.translation = {.0f, .0f, .5f};   
+        cube.transform.translation = {.0f, .0f, 2.5f};   
         cube.transform.scale = {.5f, .5f, .5f};
         gameObjects.push_back(std::move(cube));
     }
