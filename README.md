@@ -2,6 +2,7 @@ Hi. This is my attempt to learn Vulkan and write my own engine from scratch.
 
 So far these are my milestones:
 
+### 0.13 WASD movement
 ### 0.12 Camera View Transformation
 ![VK](https://i.ibb.co/ZVBhT9z/Screenshot-2024-12-27-at-10-36-14.png)
 

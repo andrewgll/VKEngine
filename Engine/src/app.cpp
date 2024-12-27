@@ -1,7 +1,10 @@
 #include "app.hpp"
 
+#include "keyboard_movement_controller.hpp"
 #include "camera.hpp"
 #include "render_system.hpp"
+
+#define MAX_FRAME_TIME 0.1f
 
 // libs
 #define GLM_FORCE_RADIANT
@@ -10,8 +13,9 @@
 #include <glm/gtc/constants.hpp>
 
 // std
-#include <stdexcept>
 #include <array>
+#include <chrono>
+#include <stdexcept>
 
 namespace vke
 {
@@ -26,14 +30,26 @@ namespace vke
     {
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
         VkeCamera camera{};
-        // camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f,0.f,1));
-        camera.setViewTarget(glm::vec3(-1.f,-2.f,2.f), glm::vec3(0.f, 0.f, 2.5f));
+
+        auto viewerObject = VkeGameObject::createGameObject();
+        KeyboardMovementController cameraController{};
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
 
+            auto newTime = std::chrono::high_resolution_clock::now();
+            auto frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+            currentTime = newTime;
+
+            frameTime = glm::min(frameTime, MAX_FRAME_TIME);    
+
+            cameraController.moveInPlainXZ(vkeWindow.getGLWFWindow(), frameTime, viewerObject);
+            camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
             float aspect = vkeRenderer.getAspectRatio();
-            // camera.setOrthographicProjection(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 50.f);
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
