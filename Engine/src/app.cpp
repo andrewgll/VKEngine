@@ -26,13 +26,15 @@ namespace vke
     {
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
         VkeCamera camera{};
+        // camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f,0.f,1));
+        camera.setViewTarget(glm::vec3(-1.f,-2.f,2.f), glm::vec3(0.f, 0.f, 2.5f));
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
 
             float aspect = vkeRenderer.getAspectRatio();
             // camera.setOrthographicProjection(-aspect, aspect, -1.f, 1.f, -1.f, 1.f);
-            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 50.f);
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
