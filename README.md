@@ -1,12 +1,12 @@
 Hi. This is my attempt to learn Vulkan and write my own small engine from scratch.
 
 Dependencies you need to run this engine:
-[VulkanSDK](https://vulkan.lunarg.com/sdk/home)
-[GLFW](https://www.glfw.org/)
-[tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader/blob/release/tiny_obj_loader.h)
-[Make](https://www.gnu.org/software/make/)
-[GLM](https://github.com/g-truc/glm)
-GLSLC(Should be included with VulkanSDK)
+* [VulkanSDK](https://vulkan.lunarg.com/sdk/home)
+* [GLFW](https://www.glfw.org/)
+* [tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader/blob/release/tiny_obj_loader.h)
+* [Make](https://www.gnu.org/software/make/)
+* [GLM](https://github.com/g-truc/glm)
+* GLSLC(Should be included with VulkanSDK)
 
 For now Makefile is compatible only with MacOS and homebrew.
 ## How to build:
