@@ -23,7 +23,7 @@ To run:
 ```
 
 
-So far these are my milestones:
+## So far these are my milestones:
 
 ### 0.13 WASD movement
 ### 0.12 Camera View Transformation
