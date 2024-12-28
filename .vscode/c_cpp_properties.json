@@ -5,7 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/",
-                "${workspaceFolder}/Engine/include"
+                "${workspaceFolder}/Engine/include",
+                "${workspaceFolder}/libs"    
             ],
             "defines": [],
             "macFrameworkPath": [
