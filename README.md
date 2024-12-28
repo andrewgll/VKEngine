@@ -15,7 +15,7 @@ make
 ``` 
 for debug build:
 ```sh
-make
+make debug
 ```
 To run:
 ```sh
