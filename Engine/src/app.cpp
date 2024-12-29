@@ -70,7 +70,7 @@ namespace vke
 
         gameObj.model = vkeModel;
         gameObj.transform.translation = {.0f, .0f, 2.5f};
-        gameObj.transform.scale = {.5f, .5f, .5f};
+        gameObj.transform.scale = {.1f, .1f, .1f};
         gameObjects.push_back(std::move(gameObj));
     }
 }

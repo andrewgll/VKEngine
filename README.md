@@ -1,5 +1,7 @@
 Hi. This is my attempt to learn Vulkan and write my own small engine from scratch.
 
+The Engine uses these conventions: Z forward, -Y up, triangulate faces.
+
 Dependencies you need to run this engine:
 * [VulkanSDK](https://vulkan.lunarg.com/sdk/home)
 * [GLFW](https://www.glfw.org/)
@@ -25,6 +27,8 @@ To run:
 
 ## So far these are my milestones:
 
+### 0.14 Custom model upload + lighting
+![VK](https://i.ibb.co/mJ4YHTk/Screenshot-2024-12-29-at-09-46-27.png)
 ### 0.13 WASD movement
 ### 0.12 Camera View Transformation
 ![VK](https://i.ibb.co/ZVBhT9z/Screenshot-2024-12-27-at-10-36-14.png)
