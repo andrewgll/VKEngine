@@ -1,4 +1,5 @@
 #pragma once
+#include "buffer.hpp"
 #include "device.hpp"
 
 // libs
@@ -56,13 +57,11 @@ namespace vke
 
         VkeDevice &vkeDevice;
 
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
+        std::unique_ptr<VkeBuffer> vertexBuffer;
         uint32_t vertexCount;
 
         bool hasIndexBuffer = false;
-        VkBuffer indexBuffer;
-        VkDeviceMemory indexBufferMemory;
+        std::unique_ptr<VkeBuffer> indexBuffer;
         uint32_t indexCount;
     };
 }

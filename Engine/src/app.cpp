@@ -3,6 +3,7 @@
 #include "keyboard_movement_controller.hpp"
 #include "camera.hpp"
 #include "render_system.hpp"
+#include "buffer.hpp"
 
 #define MAX_FRAME_TIME 0.1f
 
@@ -19,6 +20,14 @@
 
 namespace vke
 {
+    // global uniform buffer object
+    // like a push constant, but for uniform buffers
+    struct GlobalUbo
+    {
+        glm::mat4 projectionView{1.f};
+        glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+    };
+
     App::App()
     {
         loadGameObjects();
@@ -28,6 +37,19 @@ namespace vke
     }
     void App::run()
     {
+
+        std::vector<std::unique_ptr<VkeBuffer>> uboBuffers(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < uboBuffers.size(); i++)
+        {
+            uboBuffers[i] = std::make_unique<VkeBuffer>(
+                vkeDevice,
+                sizeof(GlobalUbo),
+                1,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+            uboBuffers[i]->map();
+        }
+
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
         VkeCamera camera{};
 
@@ -53,8 +75,16 @@ namespace vke
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 50.f);
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
+                int frameIndex = vkeRenderer.getFrameIndex();
+                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera};
+                // update
+                GlobalUbo ubo{};
+                ubo.projectionView = camera.getProjection() * camera.getView();
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);    
+                uboBuffers[frameIndex]->flush();
+                // render
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+                renderSystem.renderGameObjects(frameInfo, gameObjects);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
