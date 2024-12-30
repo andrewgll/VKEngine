@@ -57,7 +57,7 @@ namespace vke
         }
 
         auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                                    .build();
 
         std::vector<VkDescriptorSet> globalDescriptorSets{VkeSwapChain::MAX_FRAMES_IN_FLIGHT};
@@ -96,7 +96,7 @@ namespace vke
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
-                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
+                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
                 // update
                 GlobalUbo ubo{};
                 ubo.projectionView = camera.getProjection() * camera.getView();
@@ -104,7 +104,7 @@ namespace vke
                 uboBuffers[frameIndex]->flush();
                 // render
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(frameInfo, gameObjects);
+                renderSystem.renderGameObjects(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -115,17 +115,17 @@ namespace vke
     void App::loadGameObjects()
     {
         std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/skull.obj");
-        auto gameObj = VkeGameObject::createGameObject();
-        gameObj.model = vkeModel;
-        gameObj.transform.translation = {0.f, .5f, 0.f};
-        gameObj.transform.scale = {.01f, .01f, .01f};
-        gameObjects.push_back(std::move(gameObj));
+        auto skull = VkeGameObject::createGameObject();
+        skull.model = vkeModel;
+        skull.transform.translation = {0.f, .5f, 0.f};
+        skull.transform.scale = {.01f, .01f, .01f};
+        gameObjects.emplace(skull.getId(), std::move(skull));
 
         vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
         auto floor = VkeGameObject::createGameObject();
         floor.model = vkeModel;
         floor.transform.translation = {0.f, .5f, 0.f};
-        floor.transform.scale = {.3f, .1f, .3f};
-        gameObjects.push_back(std::move(floor));
+        floor.transform.scale = {.5f, .1f, .5f};
+        gameObjects.emplace(floor.getId(), std::move(floor));
     }
 }

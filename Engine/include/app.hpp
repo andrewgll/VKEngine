@@ -33,6 +33,6 @@ namespace vke
         VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
-        std::vector<VkeGameObject> gameObjects;
+        VkeGameObject::Map gameObjects;
     };
 } // namespace vke
