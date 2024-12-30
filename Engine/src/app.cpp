@@ -24,8 +24,10 @@ namespace vke
     // like a push constant, but for uniform buffers
     struct GlobalUbo
     {
-        alignas(16) glm::mat4 projectionView{1.f};
-        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+        glm::mat4 projectionView{1.f};
+        glm::vec4 ambientLight{1.f, 1.f, 1.f, .02f}; // w is intensity
+        glm::vec3 lightPosition{-1.f};
+        alignas(16) glm::vec4 lightColor{-1.f}; // w is intensity
     };
 
     App::App()
@@ -71,6 +73,7 @@ namespace vke
         VkeCamera camera{};
 
         auto viewerObject = VkeGameObject::createGameObject();
+        viewerObject.transform.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -112,12 +115,17 @@ namespace vke
     void App::loadGameObjects()
     {
         std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/skull.obj");
-
         auto gameObj = VkeGameObject::createGameObject();
-
         gameObj.model = vkeModel;
-        gameObj.transform.translation = {.0f, .0f, 2.5f};
-        gameObj.transform.scale = {.1f, .1f, .1f};
+        gameObj.transform.translation = {0.f, .5f, 0.f};
+        gameObj.transform.scale = {.01f, .01f, .01f};
         gameObjects.push_back(std::move(gameObj));
+
+        vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
+        auto floor = VkeGameObject::createGameObject();
+        floor.model = vkeModel;
+        floor.transform.translation = {0.f, .5f, 0.f};
+        floor.transform.scale = {.3f, .1f, .3f};
+        gameObjects.push_back(std::move(floor));
     }
 }

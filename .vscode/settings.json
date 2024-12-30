@@ -59,6 +59,7 @@
         "algorithm": "cpp",
         "fstream": "cpp",
         "cassert": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "map": "cpp"
     }
 }
