@@ -24,12 +24,16 @@ namespace vke
     // like a push constant, but for uniform buffers
     struct GlobalUbo
     {
-        glm::mat4 projectionView{1.f};
-        glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+        alignas(16) glm::mat4 projectionView{1.f};
+        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
     };
 
     App::App()
     {
+        globalPool = VkeDescriptorPool::Builder(vkeDevice)
+                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .build();
         loadGameObjects();
     }
     App::~App()
@@ -50,7 +54,20 @@ namespace vke
             uboBuffers[i]->map();
         }
 
-        RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass()};
+        auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                                   .build();
+
+        std::vector<VkDescriptorSet> globalDescriptorSets{VkeSwapChain::MAX_FRAMES_IN_FLIGHT};
+        for (int i = 0; i < globalDescriptorSets.size(); i++)
+        {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            VkeDescriptorWriter(*globalSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)
+                .build(globalDescriptorSets[i]);
+        }
+
+        RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
         VkeCamera camera{};
 
         auto viewerObject = VkeGameObject::createGameObject();
@@ -76,11 +93,11 @@ namespace vke
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
-                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera};
+                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
                 // update
                 GlobalUbo ubo{};
                 ubo.projectionView = camera.getProjection() * camera.getView();
-                uboBuffers[frameIndex]->writeToBuffer(&ubo);    
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
                 // render
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);

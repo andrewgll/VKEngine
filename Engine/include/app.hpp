@@ -4,6 +4,8 @@
 #include "game_object.hpp"
 #include "device.hpp"
 #include "renderer.hpp"
+#include "descriptors.hpp"
+
 // std
 #include <memory>
 #include <vector>
@@ -26,10 +28,11 @@ namespace vke
     private:
         void loadGameObjects();
 
-
         VkeWindow vkeWindow{WIDTH, HEIGHT, "PIZDEC"};
         VkeDevice vkeDevice{vkeWindow};
         VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
+
+        std::unique_ptr<VkeDescriptorPool> globalPool{};
         std::vector<VkeGameObject> gameObjects;
     };
 } // namespace vke

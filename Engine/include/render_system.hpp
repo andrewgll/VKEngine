@@ -15,14 +15,14 @@ namespace vke
     {
     public:
 
-        RenderSystem(VkeDevice& device, VkRenderPass renderPass);
+        RenderSystem(VkeDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
         ~RenderSystem();
 
         RenderSystem(const RenderSystem &) = delete;
         RenderSystem &operator=(const RenderSystem &) = delete;
         void renderGameObjects(FrameInfo& frameInfo, std::vector<VkeGameObject>& gameObjects);
     private:
-        void createPipelineLayout();
+        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass);
 
         VkeDevice& vkeDevice;
