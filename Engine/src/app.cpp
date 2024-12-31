@@ -2,7 +2,8 @@
 
 #include "keyboard_movement_controller.hpp"
 #include "camera.hpp"
-#include "render_system.hpp"
+#include "systems/render_system.hpp"
+#include "systems/point_light_system.hpp"
 #include "buffer.hpp"
 
 #define MAX_FRAME_TIME 0.1f
@@ -20,15 +21,6 @@
 
 namespace vke
 {
-    // global uniform buffer object
-    // like a push constant, but for uniform buffers
-    struct GlobalUbo
-    {
-        glm::mat4 projectionView{1.f};
-        glm::vec4 ambientLight{1.f, 1.f, 1.f, .02f}; // w is intensity
-        glm::vec3 lightPosition{-1.f};
-        alignas(16) glm::vec4 lightColor{-1.f}; // w is intensity
-    };
 
     App::App()
     {
@@ -70,6 +62,7 @@ namespace vke
         }
 
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+        PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
         VkeCamera camera{};
 
         auto viewerObject = VkeGameObject::createGameObject();
@@ -99,12 +92,15 @@ namespace vke
                 FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
                 // update
                 GlobalUbo ubo{};
-                ubo.projectionView = camera.getProjection() * camera.getView();
+                ubo.projection = camera.getProjection();
+                ubo.view = camera.getView();
+                pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
                 // render
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
+                pointLightSystem.render(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -118,14 +114,35 @@ namespace vke
         auto skull = VkeGameObject::createGameObject();
         skull.model = vkeModel;
         skull.transform.translation = {0.f, .5f, 0.f};
-        skull.transform.scale = {.01f, .01f, .01f};
+        skull.transform.scale = {.04f, .04f, .04f};
         gameObjects.emplace(skull.getId(), std::move(skull));
 
         vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
         auto floor = VkeGameObject::createGameObject();
         floor.model = vkeModel;
         floor.transform.translation = {0.f, .5f, 0.f};
-        floor.transform.scale = {.5f, .1f, .5f};
+        floor.transform.scale = {1.5f, .1f, 1.5f};
         gameObjects.emplace(floor.getId(), std::move(floor));
+
+        // auto pointLight = VkeGameObject::makePointLight(0.2f); // do not reuse point light again
+        // gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+
+        std::vector<glm::vec3> lightColors{
+            {1.f, .1f, .1f},
+            {.1f, .1f, 1.f},
+            {.1f, 1.f, .1f},
+            {1.f, 1.f, .1f},
+            {.1f, 1.f, 1.f},
+            {1.f, 1.f, 1.f} //
+        };
+
+        for (int i = 0; i < lightColors.size(); i++)
+        {
+            auto pointLight = VkeGameObject::makePointLight(0.2f);
+            pointLight.color = lightColors[i];
+            auto rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
+            pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f,-1.f,-1.f,1.f)};
+            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+        }
     }
 }

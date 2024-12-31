@@ -2,16 +2,17 @@
 
 #include "model.hpp"
 
-//libs
+// libs
 #include <glm/gtc/matrix_transform.hpp>
 
-//std
+// std
 #include <memory>
 #include <unordered_map>
 
 namespace vke
 {
-    struct TransformComponent{
+    struct TransformComponent
+    {
         glm::vec3 translation{};
         glm::vec3 scale{1.f, 1.f, 1.f};
         glm::vec3 rotation{};
@@ -20,23 +21,32 @@ namespace vke
         glm::mat3 normalMatrix();
     };
 
-    class VkeGameObject{
-        public:
-        
+    struct PointLightComponent
+    {
+        float lightIntensity{1.f};
+    };
+
+    class VkeGameObject
+    {
+    public:
         using id_t = unsigned int;
         using Map = std::unordered_map<id_t, VkeGameObject>;
-        
-        static VkeGameObject createGameObject() {
+
+        static VkeGameObject createGameObject()
+        {
             static id_t currentId = 0;
             return VkeGameObject{currentId++};
         }
 
-        VkeGameObject(const VkeGameObject&) = delete;
-        VkeGameObject &operator = (const VkeGameObject&) =delete;
-        VkeGameObject(VkeGameObject&&) = default;
-        VkeGameObject &operator = (VkeGameObject&&) = default;
+        static VkeGameObject makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
 
-        const id_t getId() {
+        VkeGameObject(const VkeGameObject &) = delete;
+        VkeGameObject &operator=(const VkeGameObject &) = delete;
+        VkeGameObject(VkeGameObject &&) = default;
+        VkeGameObject &operator=(VkeGameObject &&) = default;
+
+        const id_t getId()
+        {
             return id;
         }
 
@@ -44,10 +54,11 @@ namespace vke
         glm::vec3 color{};
         TransformComponent transform{};
 
-        private:
+        std::unique_ptr<PointLightComponent> pointLight = nullptr;
+
+    private:
         VkeGameObject(id_t objId) : id{objId} {}
 
         id_t id;
-
     };
 } // namespace vke

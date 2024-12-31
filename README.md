@@ -27,13 +27,15 @@ To run:
 
 ## So far these are my milestones:
 
-### 0.14 Custom model upload + lighting
+### 0.15 point lights, uniform buffers, descriptor sets.
+![VK](https://i.ibb.co/G5gLdt8/Screenshot-2024-12-31-at-11-01-59.png)
+### 0.14 Custom model upload + lighting.
 ![VK](https://i.ibb.co/mJ4YHTk/Screenshot-2024-12-29-at-09-46-27.png)
-### 0.13 WASD movement
-### 0.12 Camera View Transformation
+### 0.13 WASD movement.
+### 0.12 Camera View Transformation.
 ![VK](https://i.ibb.co/ZVBhT9z/Screenshot-2024-12-27-at-10-36-14.png)
 
-### 0.11 Perspective Projection
+### 0.11 Perspective Projection.
 ### 0.1 finally 3D.
 ![VK](https://i.ibb.co/BySfjdN/Screenshot-2024-12-26-at-22-09-28.png)
 
