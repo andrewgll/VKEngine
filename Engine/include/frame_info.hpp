@@ -20,6 +20,7 @@ namespace vke
     {
         glm::mat4 projection{1.f};
         glm::mat4 view{1.f};
+        glm::mat4 inverseView{1.f}; // to transform value from camera to world space
         glm::vec4 ambientLight{1.f, 1.f, 1.f, .02f}; // w is intensity
         PointLight pointLights[MAX_LIGHTS];
         int numLights;
