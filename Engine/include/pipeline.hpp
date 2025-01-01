@@ -5,12 +5,14 @@
 
 #include "device.hpp"
 
-namespace vke {
+namespace vke
+{
 
-    struct PipelineConfigInfo { 
-
-        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
-        PipelineConfigInfo& operator = (const PipelineConfigInfo&) = delete;
+    struct PipelineConfigInfo
+    {
+        PipelineConfigInfo() = delete;
+        PipelineConfigInfo(const PipelineConfigInfo &) = delete;
+        PipelineConfigInfo &operator=(const PipelineConfigInfo &) = delete;
 
         std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
         std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
@@ -27,35 +29,36 @@ namespace vke {
         VkRenderPass renderPass = nullptr;
         uint32_t subpass = 0;
     };
- 
 
-    class VkePipeline{
-        public:
-            VkePipeline(
-                VkeDevice& device, 
-                const std::string& vertFilepath,
-                const std::string& fragFilePath,
-                const PipelineConfigInfo& configInfo);
-            ~VkePipeline();
-            VkePipeline(const VkePipeline&) = delete;
-            VkePipeline operator = (const VkePipeline&) = delete;
+    class VkePipeline
+    {
+    public:
+        VkePipeline(
+            VkeDevice &device,
+            const std::string &vertFilepath,
+            const std::string &fragFilePath,
+            const PipelineConfigInfo &configInfo);
+        ~VkePipeline();
+        VkePipeline(const VkePipeline &) = delete;
+        VkePipeline operator=(const VkePipeline &) = delete;
 
-            void bind(VkCommandBuffer commandBuffer);
+        void bind(VkCommandBuffer commandBuffer);
 
-            static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
-        private:
-            std::vector<char> readFile(const std::string& filePath);
-            void createGraphicsPipeline(
-                const std::string& vertFilePath, 
-                const std::string& fragFilePath,
-                const PipelineConfigInfo& configInfo);
-            
-            void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+        static void enableAlphaBlending(PipelineConfigInfo &configInfo);
 
-            VkeDevice& vkeDevice;
-            VkPipeline graphicsPipeline;
-            VkShaderModule vertShaderModule;
-            VkShaderModule fragShaderModule;
+    private:
+        std::vector<char> readFile(const std::string &filePath);
+        void createGraphicsPipeline(
+            const std::string &vertFilePath,
+            const std::string &fragFilePath,
+            const PipelineConfigInfo &configInfo);
 
+        void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
+
+        VkeDevice &vkeDevice;
+        VkPipeline graphicsPipeline;
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
     };
 } // namespace vke

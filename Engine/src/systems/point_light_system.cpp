@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <array>
 #include <cassert>
+#include <stdexcept>
+#include <map>
 
 namespace vke
 {
@@ -58,6 +60,7 @@ namespace vke
 
         PipelineConfigInfo pipelineConfig{};
         VkePipeline::defaultPipelineConfigInfo(pipelineConfig);
+        VkePipeline::enableAlphaBlending(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
         vkePipeline = std::make_unique<VkePipeline>(
@@ -80,7 +83,7 @@ namespace vke
                 continue;
 
             assert(lightIndex < MAX_LIGHTS && "Exceeded max point lights");
-            
+
             // update point light position
             obj.transform.translation = glm::vec3(rotate * glm::vec4(obj.transform.translation, 1.f));
 
@@ -95,6 +98,18 @@ namespace vke
 
     void PointLightSystem::render(FrameInfo &frameInfo)
     {
+        // sort lights
+        std::map<float, VkeGameObject::id_t> sorted;
+        for (auto &kv : frameInfo.gameObjects)
+        {
+            auto &obj = kv.second;
+            if (obj.pointLight == nullptr)
+                continue;
+            auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+            float disSquared = glm::dot(offset, offset);
+            sorted[disSquared] = obj.getId();
+        }
+
         // render
         vkePipeline->bind(frameInfo.commandBuffer);
 
@@ -107,11 +122,12 @@ namespace vke
             &frameInfo.globalDescriptorSet,
             0,
             nullptr);
-        for (auto &kv : frameInfo.gameObjects)
+        // iterate through sorted lights in reverse order
+        for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-            auto &obj = kv.second;
-            if (obj.pointLight == nullptr)
-                continue;
+            // use game obj to find light object
+            auto &obj = frameInfo.gameObjects.at(it->second);
+
             PointLightPushConstants push{};
             push.position = glm::vec4(obj.transform.translation, 1.f);
             push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);

@@ -100,8 +100,10 @@ namespace vke
                 uboBuffers[frameIndex]->flush();
                 // render
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
+
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
+                
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -122,7 +124,7 @@ namespace vke
         auto floor = VkeGameObject::createGameObject();
         floor.model = vkeModel;
         floor.transform.translation = {0.f, .5f, 0.f};
-        floor.transform.scale = {1.5f, .1f, 1.5f};
+        floor.transform.scale = {100.f, .1f, 100.f};
         gameObjects.emplace(floor.getId(), std::move(floor));
 
         // auto pointLight = VkeGameObject::makePointLight(0.2f); // do not reuse point light again
