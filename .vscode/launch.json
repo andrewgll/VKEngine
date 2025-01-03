@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C/C++: Build and Debug with Makefile",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/app",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "DYLD_LIBRARY_PATH",
+                    "value": "/Users/mra/VulkanSDK/1.3.296.0/macOS/lib"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "targetArchitecture": "arm64", 
+            "preLaunchTask": "Build with Makefile (Debug)"
+        }
+    ]
+}
