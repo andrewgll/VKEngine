@@ -6,6 +6,8 @@
 #include "systems/point_light_system.hpp"
 #include "buffer.hpp"
 
+#include "texture.hpp"
+
 #define MAX_FRAME_TIME 0.1f
 
 // libs
@@ -27,6 +29,7 @@ namespace vke
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
                          .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .build();
         loadGameObjects();
     }
@@ -50,7 +53,14 @@ namespace vke
 
         auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                    .build();
+
+        Texture texture = Texture(vkeDevice, "textures/skull.jpg");
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.sampler = texture.getSampler();
+        imageInfo.imageView = texture.getImageView();
+        imageInfo.imageLayout = texture.getImageLayout();
 
         std::vector<VkDescriptorSet> globalDescriptorSets{VkeSwapChain::MAX_FRAMES_IN_FLIGHT};
         for (int i = 0; i < globalDescriptorSets.size(); i++)
@@ -58,6 +68,7 @@ namespace vke
             auto bufferInfo = uboBuffers[i]->descriptorInfo();
             VkeDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
+                .writeImage(1, &imageInfo)
                 .build(globalDescriptorSets[i]);
         }
 
@@ -103,7 +114,7 @@ namespace vke
 
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
-                
+
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -144,7 +155,7 @@ namespace vke
             auto pointLight = VkeGameObject::makePointLight(0.2f);
             pointLight.color = lightColors[i];
             auto rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
-            pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f,-1.f,-1.f,1.f)};
+            pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f, -1.f, -1.f, 1.f)};
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }
     }
