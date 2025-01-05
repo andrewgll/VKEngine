@@ -61,5 +61,6 @@
         "cassert": "cpp",
         "__config": "cpp",
         "map": "cpp"
-    }
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }

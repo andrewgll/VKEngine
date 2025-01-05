@@ -35,6 +35,7 @@ namespace vke
 
         VkBuffer getBuffer() const { return buffer; }
         void *getMappedMemory() const { return mapped; }
+        VkDeviceMemory getMemory() const { return memory; }
         uint32_t getInstanceCount() const { return instanceCount; }
         VkDeviceSize getInstanceSize() const { return instanceSize; }
         VkDeviceSize getAlignmentSize() const { return instanceSize; }
