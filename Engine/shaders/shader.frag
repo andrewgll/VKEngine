@@ -3,9 +3,10 @@
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
+layout(location = 3) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
-
+layout(binding = 1) uniform sampler2D texSampler;
 
 struct PointLight {
   vec4 position;
@@ -59,6 +60,8 @@ void main(){
 
     }
 
-    outColor = vec4(diffuseLight * fragColor +  specularLight * fragColor, 1.0);
-    
+    vec3 imageColor = texture(texSampler, fragTexCoord).xyz;
+
+    outColor = vec4((diffuseLight * fragColor +  specularLight * fragColor)*imageColor, 1.0);
+    // outColor = vec4(fragTexCoord, 1.0,1.0);
 }

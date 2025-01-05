@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model.hpp"
+#include "texture.hpp"  
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,6 +52,7 @@ namespace vke
         }
 
         std::shared_ptr<VkeModel> model{};
+        std::unique_ptr<VkeTexture> texture;;
         glm::vec3 color{};
         TransformComponent transform{};
 
