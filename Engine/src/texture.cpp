@@ -1,43 +1,92 @@
 #include "texture.hpp"
 #include "buffer.hpp"
 #include "device.hpp"
+#include "texture_sampler.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
+#include <iostream>
 namespace vke
 {
     VkeTexture::VkeTexture(VkeDevice &device, const std::string &filename) : vkeDevice{device}
     {
         createTextureImage(filename);
+        sampler = TextureSampler(vkeDevice).getSampler();
+        imageView = createImageView(image, imageFormat, vkeDevice);
+        std::cout << "Texture loaded from file: " << filename << std::endl;
     };
-
+    VkeTexture::~VkeTexture()
+    {
+        if (imageView != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(vkeDevice.device(), imageView, nullptr);
+            imageView = VK_NULL_HANDLE;
+        }
+        if (sampler != VK_NULL_HANDLE)
+        {
+            vkDestroySampler(vkeDevice.device(), sampler, nullptr);
+            sampler = VK_NULL_HANDLE;
+        }
+        if (image != VK_NULL_HANDLE)
+        {
+            vkDestroyImage(vkeDevice.device(), image, nullptr);
+            image = VK_NULL_HANDLE;
+        }
+        if (imageMemory != VK_NULL_HANDLE)
+        {
+            vkFreeMemory(vkeDevice.device(), imageMemory, nullptr);
+            imageMemory = VK_NULL_HANDLE;
+        }
+    }
     void VkeTexture::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory)
     {
+        imageFormat = format;
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         createInfo.imageType = VK_IMAGE_TYPE_2D;
         createInfo.extent.width = static_cast<uint32_t>(texWidth);
         createInfo.extent.height = static_cast<uint32_t>(texHeight);
         createInfo.extent.depth = 1;
-        createInfo.mipLevels = 1;
+        createInfo.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
         createInfo.arrayLayers = 1;
-        createInfo.format = textureFormat;
+        createInfo.format = imageFormat;
         createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         createInfo.flags = 0; // Optional
-        if (vkCreateImage(vkeDevice.device(), &createInfo, nullptr, &textureImage) != VK_SUCCESS)
+        if (vkCreateImage(vkeDevice.device(), &createInfo, nullptr, &image) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create image!");
         }
         vkeDevice.createImageWithInfo(
             createInfo,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            textureImage,
-            deviceMemory);
+            image,
+            imageMemory);
     }
+    VkImageView VkeTexture::createImageView(VkImage image, VkFormat format, VkeDevice &device)
+    {
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = format;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        VkImageView imageView;
+        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create image view!");
+        }
+
+        return imageView;
+    }
+
     void VkeTexture::createTextureImage(const std::string &filename)
     {
         stbi_uc *pixels = stbi_load(filename.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -62,11 +111,11 @@ namespace vke
 
         stbi_image_free(pixels);
 
-        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, deviceMemory);
+        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
 
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer.getBuffer(), textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copyBufferToImage(stagingBuffer.getBuffer(), image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
     void VkeTexture::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
     {
@@ -148,6 +197,5 @@ namespace vke
             &region);
         vkeDevice.endSingleTimeCommands(commandBuffer);
     }
-   
-    
+
 }

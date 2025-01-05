@@ -15,12 +15,15 @@ namespace vke
     public:
         VkeTexture(VkeDevice &device, const std::string &filename);
         ~VkeTexture();
-
         // Not copyable or movable
         VkeTexture(VkeTexture &&) = delete;
         VkeTexture(const VkeTexture &) = delete;
         VkeTexture &operator=(VkeTexture &&) = delete;
         VkeTexture operator=(const VkeTexture &) = delete;
+
+        VkSampler getSampler() { return sampler; }
+        VkImageView getImageView() { return imageView; }
+        VkImageLayout getImageLayout() { return imageLayout; }
 
     private:
         void loadTexture(const std::string &filename);
@@ -28,16 +31,16 @@ namespace vke
         void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         void createTextureImage(const std::string &filename);
         void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-        void createTextureImageView();
+        VkImageView createImageView(VkImage image, VkFormat format, VkeDevice &device);
 
+        VkImage image;
+        VkFormat imageFormat;
+        VkSampler sampler;
         VkeDevice &vkeDevice;
-        VkSampler sampler{VK_NULL_HANDLE};
-        VkDeviceMemory deviceMemory{VK_NULL_HANDLE};
-        VkFormat textureFormat{VK_FORMAT_R8G8B8A8_SRGB};
-
-        VkImage textureImage{VK_NULL_HANDLE};
-        VkImageView textureImageView{VK_NULL_HANDLE};
+        VkImageView imageView;
         VkImageLayout imageLayout;
+        VkDeviceMemory imageMemory;
+
         VkImageCreateInfo createInfo{};
         VkImageViewCreateInfo viewInfo{};
 
@@ -46,4 +49,5 @@ namespace vke
         int texChannels{0};
         int mipLevels{0};
     };
+    ;
 } // namespace vke
