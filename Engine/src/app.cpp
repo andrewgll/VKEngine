@@ -57,7 +57,7 @@ namespace vke
         std::vector<VkDescriptorSet> globalDescriptorSets{VkeSwapChain::MAX_FRAMES_IN_FLIGHT};
 
         VkDescriptorImageInfo imageInfo{};
-        auto texture = VkeTexture(vkeDevice, "textures/skull.jpg");
+        auto texture = VkeTexture(vkeDevice, "textures/eye.jpg");
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.sampler = texture.getSampler();
         imageInfo.imageView = texture.getImageView();
@@ -123,7 +123,7 @@ namespace vke
 
     void App::loadGameObjects()
     {
-        std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/skull.obj");
+        std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/eye.obj");
         auto skull = VkeGameObject::createGameObject();
         skull.model = vkeModel;
 

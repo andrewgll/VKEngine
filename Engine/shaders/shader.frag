@@ -63,4 +63,5 @@ void main(){
     vec3 imageColor = texture(texSampler, fragTexCoord).xyz;
 
     outColor = vec4((diffuseLight * fragColor +  specularLight * fragColor)*imageColor, 1.0);
+    // outColor = vec4(fragTexCoord, 1.0,1.0);
 }
