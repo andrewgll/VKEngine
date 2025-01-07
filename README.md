@@ -26,6 +26,8 @@ To run:
 
 
 ## So far these are my milestones:
+### 0.17 Multiple Texture loader, ObjManager, time in shaders
+![VK](https://i.ibb.co/ZMp7GP4/Screenshot-2025-01-07-at-13-11-29.png)
 ### 0.16 specular lighting
 ### 0.15 point lights, uniform buffers, descriptor sets.
 ![VK](https://i.ibb.co/G5gLdt8/Screenshot-2024-12-31-at-11-01-59.png)

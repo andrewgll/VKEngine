@@ -13,6 +13,7 @@ namespace vke
         createTextureImage(filename);
         sampler = TextureSampler(vkeDevice).getSampler();
         imageView = createImageView(image, imageFormat, vkeDevice);
+        createImageInfo();
         std::cout << "Texture loaded from file: " << filename << std::endl;
     };
     VkeTexture::~VkeTexture()
@@ -89,6 +90,8 @@ namespace vke
 
     void VkeTexture::createTextureImage(const std::string &filename)
     {
+        stbi_set_flip_vertically_on_load(true);
+
         stbi_uc *pixels = stbi_load(filename.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
@@ -197,5 +200,9 @@ namespace vke
             &region);
         vkeDevice.endSingleTimeCommands(commandBuffer);
     }
-
+    void VkeTexture::createImageInfo(){
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.sampler = getSampler();
+        imageInfo.imageView = getImageView();
+    }
 }

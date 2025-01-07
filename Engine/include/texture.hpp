@@ -15,15 +15,18 @@ namespace vke
     public:
         VkeTexture(VkeDevice &device, const std::string &filename);
         ~VkeTexture();
-        // Not copyable or movable
-        VkeTexture(VkeTexture &&) = delete;
+        // Allow move semantics
+        VkeTexture(VkeTexture &&other) noexcept;
+        VkeTexture &operator=(VkeTexture &&other) noexcept;
+
+        // Delete copy semantics
         VkeTexture(const VkeTexture &) = delete;
-        VkeTexture &operator=(VkeTexture &&) = delete;
-        VkeTexture operator=(const VkeTexture &) = delete;
+        VkeTexture &operator=(const VkeTexture &) = delete;
 
         VkSampler getSampler() { return sampler; }
         VkImageView getImageView() { return imageView; }
         VkImageLayout getImageLayout() { return imageLayout; }
+        VkDescriptorImageInfo &getDescriptor() { return imageInfo; }
 
     private:
         void loadTexture(const std::string &filename);
@@ -31,6 +34,7 @@ namespace vke
         void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         void createTextureImage(const std::string &filename);
         void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+        void createImageInfo();
         VkImageView createImageView(VkImage image, VkFormat format, VkeDevice &device);
 
         VkImage image;
@@ -40,6 +44,7 @@ namespace vke
         VkImageView imageView;
         VkImageLayout imageLayout;
         VkDeviceMemory imageMemory;
+        VkDescriptorImageInfo imageInfo;
 
         VkImageCreateInfo createInfo{};
         VkImageViewCreateInfo viewInfo{};

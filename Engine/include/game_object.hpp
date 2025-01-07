@@ -1,7 +1,8 @@
 #pragma once
 
 #include "model.hpp"
-#include "texture.hpp"  
+#include "texture.hpp"
+#include "descriptors.hpp"
 
 // libs
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,17 +47,20 @@ namespace vke
         VkeGameObject(VkeGameObject &&) = default;
         VkeGameObject &operator=(VkeGameObject &&) = default;
 
+        void initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer);
+
         const id_t getId()
         {
             return id;
         }
 
         std::shared_ptr<VkeModel> model{};
-        std::unique_ptr<VkeTexture> texture;;
+        std::shared_ptr<VkeTexture> texture;
         glm::vec3 color{};
         TransformComponent transform{};
-
-        std::unique_ptr<PointLightComponent> pointLight = nullptr;
+        VkDescriptorSet descriptorSet{};
+        std::unique_ptr<PointLightComponent>
+            pointLight = nullptr;
 
     private:
         VkeGameObject(id_t objId) : id{objId} {}

@@ -8,9 +8,10 @@
 
 namespace vke
 {
-    #define MAX_LIGHTS 10
+#define MAX_LIGHTS 10
 
-    struct PointLight{
+    struct PointLight
+    {
         glm::vec4 position{};
         glm::vec4 color{};
     };
@@ -20,7 +21,7 @@ namespace vke
     {
         glm::mat4 projection{1.f};
         glm::mat4 view{1.f};
-        glm::mat4 inverseView{1.f}; // to transform value from camera to world space
+        glm::mat4 inverseView{1.f};                  // to transform value from camera to world space
         glm::vec4 ambientLight{1.f, 1.f, 1.f, .02f}; // w is intensity
         PointLight pointLights[MAX_LIGHTS];
         int numLights;
@@ -29,6 +30,7 @@ namespace vke
     {
         int frameIndex;
         float frameTime;
+        float currentTimeInSeconds;
         VkCommandBuffer commandBuffer;
         VkeCamera &camera;
         VkDescriptorSet globalDescriptorSet;

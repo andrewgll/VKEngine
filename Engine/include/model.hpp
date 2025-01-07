@@ -40,10 +40,8 @@ namespace vke
             void loadModels(const std::string &filepath);
         };
 
-        VkeModel(VkeDevice &device, const VkeModel::Builder &builder);
+        VkeModel(VkeDevice &device, const std::string &filepath);
         ~VkeModel();
-
-        static std::unique_ptr<VkeModel> createModelFromFile(VkeDevice &device, const std::string &filepath);
 
         VkeModel(const VkeModel &) = delete;
         VkeModel &operator=(const VkeModel &) = delete;

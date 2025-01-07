@@ -16,10 +16,11 @@ namespace vke
     {
         glm::mat4 modelMatrix{1.f};
         glm::mat4 normalMatrix{1.f};
+        glm::float32_t time{0.f};
     };
-    RenderSystem::RenderSystem(VkeDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : vkeDevice{device}
+    RenderSystem::RenderSystem(VkeDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> &setLayouts) : vkeDevice{device}
     {
-        createPipelineLayout(globalSetLayout);
+        createPipelineLayout(setLayouts);
         createPipeline(renderPass);
     }
     RenderSystem::~RenderSystem()
@@ -27,23 +28,20 @@ namespace vke
         vkDestroyPipelineLayout(vkeDevice.device(), pipelineLayout, nullptr);
     }
 
-    void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
+    void RenderSystem::createPipelineLayout(std::vector<VkDescriptorSetLayout> &setLayouts)
     {
-
         VkPushConstantRange pushConstantRange{};
-
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(SimplePushConstantData);
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
-
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = setLayouts.data();
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
         if (vkCreatePipelineLayout(vkeDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create pipeline layout");
@@ -83,13 +81,15 @@ namespace vke
         for (auto &kv : frameInfo.gameObjects)
         {
             auto &obj = kv.second;
-            if(obj.model == nullptr){
+            if (obj.model == nullptr)
+            {
                 continue;
             }
             SimplePushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();
-
+            push.time = frameInfo.frameTime;
+            
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
@@ -97,6 +97,15 @@ namespace vke
                 0,
                 sizeof(SimplePushConstantData),
                 &push);
+            vkCmdBindDescriptorSets(
+                frameInfo.commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayout,
+                1,
+                1,
+                &obj.descriptorSet,
+                0,
+                nullptr);
             obj.model->bind(frameInfo.commandBuffer);
             obj.model->draw(frameInfo.commandBuffer);
         }

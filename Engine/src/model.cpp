@@ -31,23 +31,17 @@ namespace std
 
 namespace vke
 {
-    VkeModel::VkeModel(VkeDevice &device, const VkeModel::Builder &builder) : vkeDevice{device}
+    VkeModel::VkeModel(VkeDevice &device, const std::string &filepath) : vkeDevice{device}
     {
+        Builder builder{};
+        builder.loadModels(filepath);
+        std::cout << "Model loaded from file: " << filepath << std::endl;
+        std::cout << "Vertex count:" << builder.vertices.size() << std::endl;
         createVertexBuffers(builder.vertices);
         createIndexBuffers(builder.indices);
     }
     VkeModel::~VkeModel()
     {
-    }
-
-    std::unique_ptr<VkeModel> VkeModel::createModelFromFile(VkeDevice &device, const std::string &filepath)
-    {
-        Builder builder{};
-        builder.loadModels(filepath);
-        // todo: only for debug
-        std::cout << "Model loaded from file: " << filepath << std::endl;
-        std::cout << "Vertex count:" << builder.vertices.size() << std::endl;
-        return std::make_unique<VkeModel>(device, builder);
     }
 
     void VkeModel::createVertexBuffers(const std::vector<Vertex> &vertices)

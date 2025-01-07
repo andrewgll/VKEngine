@@ -1,0 +1,22 @@
+# Blender 4.2.2 LTS MTL File: 'skull.blend'
+# www.blender.org
+
+newmtl Gun
+Ns 96.078453
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd /Users/mra/Downloads/Gun _obj/C:/Users/gabri/OneDrive/Documentos/textura pixel arte/pistol.png
+
+newmtl Gun_NONE
+Ns 96.078453
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd /Users/mra/Downloads/Gun _obj/Gun.png
