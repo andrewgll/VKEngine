@@ -112,7 +112,8 @@ namespace vke
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
-                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
+                float currentTimeInSeconds = std::chrono::duration<float, std::chrono::seconds::period>(currentTime.time_since_epoch()).count();
+                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
                 // update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
@@ -136,19 +137,28 @@ namespace vke
 
     void App::loadGameObjects()
     {
-        std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/eye.obj");
+        std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/skull.obj");
         auto skull = VkeGameObject::createGameObject();
         skull.model = vkeModel;
-        skull.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/eye.jpg");
+        skull.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/skull.jpg");
         skull.transform.translation = {0.f, 0.5f, 0.f};
         skull.transform.scale = {.04f, .04f, .04f};
         gameObjects.emplace(skull.getId(), std::move(skull));
 
+        vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/eye.obj");
+        auto eye = VkeGameObject::createGameObject();
+        eye.model = vkeModel;
+        eye.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/eye.jpg");
+        eye.transform.translation = {1.f, 0.5f, 0.f};
+        eye.transform.scale = {.04f, .04f, .04f};
+        gameObjects.emplace(eye.getId(), std::move(eye));
+
         vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
         auto floor = VkeGameObject::createGameObject();
         floor.model = vkeModel;
-        floor.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/texture.jpg");
+        floor.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/default.jpg");
         floor.transform.translation = {1.f, 1.f, 1.f};
+        
         floor.transform.scale = {10.f, 10.f, 10.f};
         gameObjects.emplace(floor.getId(), std::move(floor));
 

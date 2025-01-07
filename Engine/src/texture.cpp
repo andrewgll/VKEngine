@@ -90,6 +90,8 @@ namespace vke
 
     void VkeTexture::createTextureImage(const std::string &filename)
     {
+        stbi_set_flip_vertically_on_load(true);
+
         stbi_uc *pixels = stbi_load(filename.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 

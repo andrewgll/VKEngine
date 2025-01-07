@@ -26,6 +26,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 layout(push_constant) uniform Push { 
     mat4 modelMatrix; // projectiuon * view * model
     mat4 normalMatrix;
+    float time; 
 } push;
 
 void main() {

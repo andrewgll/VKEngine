@@ -16,6 +16,7 @@ namespace vke
     {
         glm::mat4 modelMatrix{1.f};
         glm::mat4 normalMatrix{1.f};
+        glm::float32_t time{0.f};
     };
     RenderSystem::RenderSystem(VkeDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> &setLayouts) : vkeDevice{device}
     {
@@ -87,7 +88,8 @@ namespace vke
             SimplePushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();
-
+            push.time = frameInfo.frameTime;
+            
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
