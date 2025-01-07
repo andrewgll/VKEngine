@@ -24,12 +24,12 @@ namespace vke
 
     App::App()
     {
-        globalPool = VkeDescriptorPool::Builder(vkeDevice)
-                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
-                         .build();
         loadGameObjects();
+        globalPool = VkeDescriptorPool::Builder(vkeDevice)
+                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
+                         .build();
     }
     App::~App()
     {
@@ -51,30 +51,43 @@ namespace vke
 
         auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                    .build();
+        auto textureSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                                    .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                                    .build();
+        std::vector<VkDescriptorSetLayout> setLayouts = {
+            globalSetLayout->getDescriptorSetLayout(),
+            textureSetLayout->getDescriptorSetLayout()};
 
-        std::vector<VkDescriptorSet> globalDescriptorSets{VkeSwapChain::MAX_FRAMES_IN_FLIGHT};
-
-        VkDescriptorImageInfo imageInfo{};
-        auto texture = VkeTexture(vkeDevice, "textures/eye.jpg");
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.sampler = texture.getSampler();
-        imageInfo.imageView = texture.getImageView();
-
+        std::vector<VkDescriptorSet> globalDescriptorSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < globalDescriptorSets.size(); i++)
         {
             auto bufferInfo = uboBuffers[i]->descriptorInfo();
             VkeDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
-                .writeImage(1, &imageInfo)
                 .build(globalDescriptorSets[i]);
         }
 
-        RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
-        PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
-        VkeCamera camera{};
+        for (auto &gameObject : gameObjects)
+        {
+            if (gameObject.second.texture)
+            {
 
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.sampler = gameObject.second.texture->getSampler();
+                imageInfo.imageView = gameObject.second.texture->getImageView();
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                VkeDescriptorWriter(*textureSetLayout, *globalPool)
+                    .writeImage(1, &imageInfo)
+                    .build(gameObject.second.descriptorSet);
+            }
+        }
+
+        RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
+        PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+
+        VkeCamera camera{};
         auto viewerObject = VkeGameObject::createGameObject();
         viewerObject.transform.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
@@ -126,7 +139,7 @@ namespace vke
         std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/eye.obj");
         auto skull = VkeGameObject::createGameObject();
         skull.model = vkeModel;
-
+        skull.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/eye.jpg");
         skull.transform.translation = {0.f, 0.5f, 0.f};
         skull.transform.scale = {.04f, .04f, .04f};
         gameObjects.emplace(skull.getId(), std::move(skull));
@@ -134,6 +147,7 @@ namespace vke
         vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
         auto floor = VkeGameObject::createGameObject();
         floor.model = vkeModel;
+        floor.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/texture.jpg");
         floor.transform.translation = {1.f, 1.f, 1.f};
         floor.transform.scale = {10.f, 10.f, 10.f};
         gameObjects.emplace(floor.getId(), std::move(floor));
@@ -159,4 +173,5 @@ namespace vke
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }
     }
+
 }

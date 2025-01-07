@@ -13,6 +13,7 @@ namespace vke
         createTextureImage(filename);
         sampler = TextureSampler(vkeDevice).getSampler();
         imageView = createImageView(image, imageFormat, vkeDevice);
+        createImageInfo();
         std::cout << "Texture loaded from file: " << filename << std::endl;
     };
     VkeTexture::~VkeTexture()
@@ -197,5 +198,9 @@ namespace vke
             &region);
         vkeDevice.endSingleTimeCommands(commandBuffer);
     }
-
+    void VkeTexture::createImageInfo(){
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.sampler = getSampler();
+        imageInfo.imageView = getImageView();
+    }
 }

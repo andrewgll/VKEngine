@@ -26,9 +26,11 @@ namespace vke
         void run();
 
     private:
+        VkDescriptorSet createDescriptorSet(VkeTexture &texture);
         void loadGameObjects();
-
-        VkeWindow vkeWindow{WIDTH, HEIGHT, "PIZDEC"};
+        VkeWindow vkeWindow{WIDTH,
+                            HEIGHT,
+                            "PIZDEC"};
         VkeDevice vkeDevice{vkeWindow};
         VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
 

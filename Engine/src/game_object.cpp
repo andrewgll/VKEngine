@@ -1,5 +1,7 @@
 #include "game_object.hpp"
 
+#include "descriptors.hpp"
+
 namespace vke
 {
     glm::mat4 TransformComponent::mat4()
@@ -63,9 +65,24 @@ namespace vke
     {
         VkeGameObject gameObj = VkeGameObject::createGameObject();
         gameObj.color = color;
-        gameObj.transform.scale.x =radius;
+        gameObj.transform.scale.x = radius;
         gameObj.pointLight = std::make_unique<PointLightComponent>();
         gameObj.pointLight->lightIntensity = intensity;
-        return gameObj;   
+        return gameObj;
+    }
+    void VkeGameObject::initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer)
+    {
+        auto writer = VkeDescriptorWriter(layout, globalDescriptorPool);
+        auto bufferInfo = uboBuffer.descriptorInfo();
+        writer.writeBuffer(0, &bufferInfo);
+        if (texture)
+        {
+            VkDescriptorImageInfo imageInfo = texture->getDescriptor();
+            writer.writeImage(1, &imageInfo);
+        }
+        if (!writer.build(descriptorSet))
+        {
+            throw std::runtime_error("Failed to build descriptor set for game object.");
+        }
     }
 }
