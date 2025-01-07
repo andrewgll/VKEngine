@@ -26,8 +26,8 @@ namespace vke
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 1.f;
-        samplerInfo.maxAnisotropy = 1.0f;
+        samplerInfo.maxLod = 100.f;
+        samplerInfo.maxAnisotropy = 16.0f;
 
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
