@@ -5,6 +5,7 @@
 #include "systems/render_system.hpp"
 #include "systems/point_light_system.hpp"
 #include "buffer.hpp"
+#include "object_manager.hpp"
 
 #define MAX_FRAME_TIME 0.1f
 
@@ -70,18 +71,17 @@ namespace vke
 
         for (auto &gameObject : gameObjects)
         {
-            if (gameObject.second.texture)
-            {
 
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.sampler = gameObject.second.texture->getSampler();
-                imageInfo.imageView = gameObject.second.texture->getImageView();
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkDescriptorImageInfo imageInfo{};
+            auto texture = gameObject.second.texture;
+            auto model = gameObject.second.model;
+            imageInfo.sampler = gameObject.second.texture->getSampler();
+            imageInfo.imageView = gameObject.second.texture->getImageView();
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                VkeDescriptorWriter(*textureSetLayout, *globalPool)
-                    .writeImage(1, &imageInfo)
-                    .build(gameObject.second.descriptorSet);
-            }
+            VkeDescriptorWriter(*textureSetLayout, *globalPool)
+                .writeImage(1, &imageInfo)
+                .build(gameObject.second.descriptorSet);
         }
 
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
@@ -137,33 +137,27 @@ namespace vke
 
     void App::loadGameObjects()
     {
-        std::shared_ptr<VkeModel> vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/skull.obj");
-        auto skull = VkeGameObject::createGameObject();
-        skull.model = vkeModel;
-        skull.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/skull.jpg");
-        skull.transform.translation = {0.f, 0.5f, 0.f};
-        skull.transform.scale = {.04f, .04f, .04f};
-        gameObjects.emplace(skull.getId(), std::move(skull));
+        ObjectManager objectManager{vkeDevice, "textures/default.jpg"};
 
-        vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/eye.obj");
-        auto eye = VkeGameObject::createGameObject();
-        eye.model = vkeModel;
-        eye.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/eye.jpg");
-        eye.transform.translation = {1.f, 0.5f, 0.f};
-        eye.transform.scale = {.04f, .04f, .04f};
-        gameObjects.emplace(eye.getId(), std::move(eye));
+        auto skullObject = objectManager
+                               .addModel("models/skull.obj")
+                               .addTexture("textures/skull.jpg")
+                               .build();
+        auto skullModel = skullObject.model;
+        auto skullTexture = skullObject.texture;
+        gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
-        vkeModel = VkeModel::createModelFromFile(vkeDevice, "models/quad.obj");
-        auto floor = VkeGameObject::createGameObject();
-        floor.model = vkeModel;
-        floor.texture = std::make_unique<VkeTexture>(vkeDevice, "textures/default.jpg");
-        floor.transform.translation = {1.f, 1.f, 1.f};
-        
-        floor.transform.scale = {10.f, 10.f, 10.f};
-        gameObjects.emplace(floor.getId(), std::move(floor));
+        // auto eyeObject = objectManager
+        //                      .addModel("models/eye.obj")
+        //                      .addTexture("textures/eye.jpg")
+        //                      .build();
+        // gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
-        // auto pointLight = VkeGameObject::makePointLight(0.2f); // do not reuse point light again
-        // gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+        // auto quadObject = objectManager
+        //                       .addModel("models/quad.obj")
+        //                       .addTexture("textures/eye.jpg")
+        //                       .build();
+        // gameObjects.emplace(quadObject.getId(), std::move(quadObject));
 
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},

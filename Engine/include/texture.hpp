@@ -15,11 +15,13 @@ namespace vke
     public:
         VkeTexture(VkeDevice &device, const std::string &filename);
         ~VkeTexture();
-        // Not copyable or movable
-        VkeTexture(VkeTexture &&) = delete;
+        // Allow move semantics
+        VkeTexture(VkeTexture &&other) noexcept;
+        VkeTexture &operator=(VkeTexture &&other) noexcept;
+
+        // Delete copy semantics
         VkeTexture(const VkeTexture &) = delete;
-        VkeTexture &operator=(VkeTexture &&) = delete;
-        VkeTexture operator=(const VkeTexture &) = delete;
+        VkeTexture &operator=(const VkeTexture &) = delete;
 
         VkSampler getSampler() { return sampler; }
         VkImageView getImageView() { return imageView; }

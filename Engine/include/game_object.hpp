@@ -55,7 +55,7 @@ namespace vke
         }
 
         std::shared_ptr<VkeModel> model{};
-        std::unique_ptr<VkeTexture> texture;
+        std::shared_ptr<VkeTexture> texture;
         glm::vec3 color{};
         TransformComponent transform{};
         VkDescriptorSet descriptorSet{};
