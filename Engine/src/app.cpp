@@ -71,7 +71,9 @@ namespace vke
 
         for (auto &gameObject : gameObjects)
         {
-
+            if(gameObject.second.texture == nullptr){
+                continue;
+            }
             VkDescriptorImageInfo imageInfo{};
             auto texture = gameObject.second.texture;
             auto model = gameObject.second.model;
@@ -142,10 +144,25 @@ namespace vke
         auto skullObject = objectManager
                                .addModel("models/skull.obj")
                                .addTexture("textures/skull.jpg")
-                               .build();
-        auto skullModel = skullObject.model;
-        auto skullTexture = skullObject.texture;
+                               .build({0.f, 0.5f, 0.f}, {.04f, .04f, .04f});
         gameObjects.emplace(skullObject.getId(), std::move(skullObject));
+
+        auto eyeObject = objectManager
+                             .addModel("models/eye.obj")
+                             .addTexture("textures/eye.jpg")
+                             .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
+        gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
+
+        auto gunObject = objectManager
+                             .addModel("models/Gun.obj")
+                             .addTexture("textures/Gun.jpg")
+                             .build({1.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
+        gameObjects.emplace(gunObject.getId(), std::move(gunObject));
+
+        auto quad = objectManager
+                        .addModel("models/quad.obj")
+                        .build({1.f, 1.f, 1.f}, {10.f, 10.f, 10.f});
+        gameObjects.emplace(quad.getId(), std::move(quad));
 
         // auto eyeObject = objectManager
         //                      .addModel("models/eye.obj")
