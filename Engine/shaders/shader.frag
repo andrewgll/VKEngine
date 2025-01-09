@@ -5,12 +5,19 @@ layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUv;
 
+layout(set = 1, binding = 1) uniform sampler2D albedoTexture;
+layout(set = 1, binding = 2) uniform sampler2D normalTexture;
+layout(set = 1, binding = 3) uniform sampler2D roughnessTexture;
+layout(set = 1, binding = 4) uniform sampler2D metallicTexture;
+layout(set = 1, binding = 5) uniform sampler2D aoTexture;
+
 layout(location = 0) out vec4 outColor;
-layout(set = 1, binding = 1) uniform sampler2D texSampler;
+
+const float PI = 3.14159265359;
 
 struct PointLight {
-  vec4 position;
-  vec4 color;
+    vec4 position; // w is unused
+    vec4 color;    // w is intensity
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
@@ -18,54 +25,103 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 view;
     mat4 invView;
     vec4 ambientLightColor; // w is intensity
-    PointLight pointLights[10]; // update this number in the engine for the max number of lights
+    PointLight pointLights[10];
     int numLights;
 } ubo;
 
-
-layout(push_constant) uniform Push { 
-    mat4 modelMatrix; // projectiuon * view * model
+layout(push_constant) uniform Push {
+    mat4 modelMatrix;
     mat4 normalMatrix;
-    float time; 
+    bool hasNormalMap;
 } push;
 
-void main(){
+vec3 getNormal() {
+    vec3 normal = fragNormalWorld;
+    if (push.hasNormalMap) {
+        vec3 tangentNormal = texture(normalTexture, fragUv).rgb * 2.0 - 1.0;
+        vec3 T = normalize(mat3(push.normalMatrix) * vec3(1.0, 0.0, 0.0));
+        vec3 B = normalize(mat3(push.normalMatrix) * vec3(0.0, 1.0, 0.0));
+        vec3 N = normalize(mat3(push.normalMatrix) * fragNormalWorld);
+        mat3 TBN = mat3(T, B, N);
+        normal = normalize(TBN * tangentNormal);
+    }
+    return normalize(normal);
+}
 
-    vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
-    vec3 specularLight = vec3(0.0);
-    vec3 surfaceNormal = normalize(fragNormalWorld);   
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
 
-    vec3 cameraPosWorld = ubo.invView[3].xyz; // camera position in world space   
-    vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld); // direction from fragment to camera
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    return a2 / (PI * denom * denom);
+}
 
-    for (int i = 0; i < ubo.numLights; i++) {
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float denom = NdotV * (1.0 - k) + k;
+    return NdotV / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+void main() {
+    vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); // sRGB to linear
+    float metallic = texture(metallicTexture, fragUv).r;
+    float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); // Avoid zero roughness
+    float ao = texture(aoTexture, fragUv).r;
+
+    vec3 N = getNormal();
+    vec3 V = normalize(ubo.invView[3].xyz - fragPosWorld);
+
+    vec3 F0 = vec3(0.04); // Default dielectric reflectance
+    F0 = mix(F0, albedo, metallic);
+
+    vec3 Lo = vec3(0.0);
+    for (int i = 0; i < ubo.numLights; ++i) {
         PointLight light = ubo.pointLights[i];
-        vec3 directionToLight = light.position.xyz - fragPosWorld;
-        float attenuation = 1.0 / dot(directionToLight, directionToLight); // distance squared
+        vec3 L = normalize(light.position.xyz - fragPosWorld);
+        vec3 H = normalize(V + L);
+        float distance = length(light.position.xyz - fragPosWorld);
+        float attenuation = 1.0 / (distance * distance);
+        vec3 radiance = light.color.rgb * light.color.a * attenuation;
 
-        directionToLight = normalize(directionToLight);
+        // Cook-Torrance BRDF
+        float NDF = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
-        float cosAngIncidence =max(dot(surfaceNormal, directionToLight), 0);
+        vec3 nominator = NDF * G * F;
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // Prevent divide by zero
+        vec3 specular = nominator / denominator;
 
-        vec3 intensity = light.color.xyz * light.color.w * attenuation;
+        // kS is the specular reflectance, kD is diffuse reflectance
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
 
-        diffuseLight += intensity * cosAngIncidence;
-
-        //specular light
-        vec3 halfVector = normalize(viewDirection + directionToLight);
-        float blinnTerm = dot(halfVector, surfaceNormal);
-        blinnTerm = clamp(blinnTerm, 0, 1);
-
-        blinnTerm = pow(blinnTerm, 100.0); // shininess
-
-        specularLight += intensity * blinnTerm;
-
+        float NdotL = max(dot(N, L), 0.0);
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
-   
+    vec3 ambient = (ubo.ambientLightColor.rgb * ubo.ambientLightColor.a) * albedo * ao;
+    vec3 color = ambient + Lo;
+    color *= ao; 
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
 
-    vec3 imageColor = texture(texSampler, fragUv).xyz;
-
-    outColor = vec4((diffuseLight * fragColor +  specularLight * fragColor)*imageColor, 1.0);
-    // outColor = vec4(fragUv, 1.0, 1.0);
+    outColor = vec4(color, 1.0);
 }
