@@ -20,7 +20,7 @@ namespace vke
     class ObjectManager
     {
     public:
-        ObjectManager(VkeDevice &vkeDevice, const std::string &defaultTexturePath = "textures/default.jpg", const std::string &defaultRoughnessPath = "textures/default_roughness.jpg");
+        ObjectManager(VkeDevice &vkeDevice);
         ~ObjectManager() = default;
         // Not copyable or movable
         ObjectManager(ObjectManager &&) = delete;
@@ -33,12 +33,15 @@ namespace vke
         VkeGameObject build(glm::vec3 translation = {0.f, 0.f, 0.f}, glm::vec3 scale = {1.f, 1.f, 1.f});
 
         float getTextureCount() { return textureCount; }
+
     private:
         VkeDevice &vkeDevice;
         float textureCount{0};
-
-        const std::string defaultTexturePath;
-        const std::string defaultRoughnessPath;
+        const std::string defaultTexturePath ="textures/default_albedo.jpg";
+        const std::string defaultNormalPath = "textures/default_normal.jpg";
+        const std::string defaultRoughnessPath = "textures/default_roughness.jpg";
+        const std::string defaultMetallicPath = "textures/default_metallic.jpg";
+        const std::string defaultAOPath = "textures/default_AO.jpg";
 
         std::shared_ptr<VkeModel> currentModel;
 

@@ -145,101 +145,56 @@ namespace vke
     void App::loadGameObjects()
     {
 
-        // auto skullObject = objectManager
-        //                        .addModel("models/skull.obj")
-        //                        .addTexture("textures/skull.jpg")
-        //                        .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
-        // gameObjects.emplace(skullObject.getId(), std::move(skullObject));
+        auto skullObject = objectManager
+                               .addModel("models/skull.obj")
+                               .addTexture("textures/skull.jpg")
+                               .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
+        gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
-        // auto eyeObject = objectManager
-        //                      .addModel("models/eye.obj")
-        //                      .addTexture("textures/eye.jpg")
-        //                      .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
-        // gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
+        auto eyeObject = objectManager
+                             .addModel("models/eye.obj")
+                             .addTexture("textures/eye.jpg")
+                             .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
+        gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
-        // auto gunObject = objectManager
-        //                      .addModel("models/Gun.obj")
-        //                      .addTexture("textures/Gun.jpg")
-        //                      .build({1.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
-        // gameObjects.emplace(gunObject.getId(), std::move(gunObject));
+        auto gunObject = objectManager
+                             .addModel("models/Gun.obj")
+                             .addTexture("textures/Gun.jpg")
+                             .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
+        gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
                         .addModel("models/quad.obj")
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        // auto sword = objectManager
-        //                  .addModel("models/sword.obj")
-        //                  .addTexture("textures/sword_albedo.jpg")
-        //                  .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-        //                  .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-        //                  .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-        //                  .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-        //                  .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        // gameObjects.emplace(sword.getId(), std::move(sword));
-        float yPos = 5.f;
-        auto chest6 = objectManager
-                          .addModel("models/chest.obj")
-                        //   .addTexture("textures/chest_albedo.jpg")
-                          //   .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          //   .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                          //  .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          //  .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos+2.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest6.getId(), std::move(chest6));
+        auto sword = objectManager
+                         .addModel("models/sword.obj")
+                         .addTexture("textures/sword_albedo.jpg")
+                         .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                         .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                         .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                         .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        gameObjects.emplace(sword.getId(), std::move(sword));
+        float yPos = 4.f;
 
-        auto chest5 = objectManager
-                          .addModel("models/chest.obj")
-                          .addTexture("textures/chest_albedo.jpg")
-                          //   .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          //   .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                          //  .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          //  .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos + 0.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest5.getId(), std::move(chest5));
-
-        auto chest = objectManager
-                         .addModel("models/chest.obj")
-                         .addTexture("textures/chest_albedo.jpg")
-                         .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                         //  .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                         //  .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                         //  .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                         .build({0.f, 1.f, yPos + -2.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest.getId(), std::move(chest));
-        auto chest2 = objectManager
-                          .addModel("models/chest.obj")
-                          .addTexture("textures/chest_albedo.jpg")
-                          .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                          //  .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          //  .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos + -4.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest2.getId(), std::move(chest2));
-        auto chest3 = objectManager
-                          .addModel("models/chest.obj")
-                          .addTexture("textures/chest_albedo.jpg")
-                          .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                          .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          //  .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos + -6.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest3.getId(), std::move(chest3));
-        auto chest4 = objectManager
-                          .addModel("models/chest.obj")
-                          .addTexture("textures/chest_albedo.jpg")
-                          .addTexture("textures/chest_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture("textures/chest_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                          .addTexture("textures/chest_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          .addTexture("textures/chest_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos + -8.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(chest4.getId(), std::move(chest4));
-
+        
+      
+        auto phone4 = objectManager
+                          .addModel("models/phone.obj")
+                          .addTexture("textures/T_Telephone_Color.tga.png")
+                          .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                          .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+                          .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                           .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                          .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
+        gameObjects.emplace(phone4.getId(), std::move(phone4));
 
         std::vector<glm::vec3> lightColors{
-            // {1.f, .1f, .1f},
-            // {.1f, .1f, 1.f},
-            // {.1f, 1.f, .1f},
+            {1.f, .1f, .1f},
+            {.1f, .1f, 1.f},
+            {.1f, 1.f, .1f},
             {1.f, 1.f, .1f},
             {.1f, 1.f, 1.f},
             {1.f, 1.f, 1.f} //

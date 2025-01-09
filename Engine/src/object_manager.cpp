@@ -9,7 +9,7 @@
 
 namespace vke
 {
-    ObjectManager::ObjectManager(VkeDevice &vkeDevice, const std::string &defaultTexturePath, const std::string &defaultRoughnessPath) : vkeDevice{vkeDevice}, defaultTexturePath{defaultTexturePath}, defaultRoughnessPath{defaultRoughnessPath}
+    ObjectManager::ObjectManager(VkeDevice &vkeDevice) : vkeDevice(vkeDevice)
     {
     }
     ObjectManager &ObjectManager::addModel(const std::string &filepath)
@@ -63,7 +63,7 @@ namespace vke
         }
         if (!currentNormal)
         {
-            currentNormal = std::make_unique<VkeTexture>(vkeDevice, defaultTexturePath);
+            currentNormal = std::make_unique<VkeTexture>(vkeDevice, defaultNormalPath);
             textureCount++;
         }
         if (!currentRoughness)
@@ -73,12 +73,12 @@ namespace vke
         }
         if (!currentMetallic)
         {
-            currentMetallic = std::make_unique<VkeTexture>(vkeDevice, defaultTexturePath);
+            currentMetallic = std::make_unique<VkeTexture>(vkeDevice, defaultMetallicPath);
             textureCount++;
         }
         if (!currentAO)
         {
-            currentAO = std::make_unique<VkeTexture>(vkeDevice, defaultTexturePath);
+            currentAO = std::make_unique<VkeTexture>(vkeDevice, defaultAOPath);
             textureCount++;
         }
 
