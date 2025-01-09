@@ -9,10 +9,18 @@
 
 namespace vke
 {
+    typedef enum TextureType
+    {
+        VKE_TEXTURE_TYPE_ALBEDO,
+        VKE_TEXTURE_TYPE_NORMAL,
+        VKE_TEXTURE_TYPE_ROUGHNESS,
+        VKE_TEXTURE_TYPE_METALLIC,
+        VKE_TEXTURE_TYPE_AO
+    } TextureType;
     class ObjectManager
     {
     public:
-        ObjectManager(VkeDevice &vkeDevice, const std::string &defaultTexturePath);
+        ObjectManager(VkeDevice &vkeDevice);
         ~ObjectManager() = default;
         // Not copyable or movable
         ObjectManager(ObjectManager &&) = delete;
@@ -21,15 +29,26 @@ namespace vke
         ObjectManager operator=(const ObjectManager &) = delete;
 
         ObjectManager &addModel(const std::string &filepath);
-        ObjectManager &addTexture(const std::string &filepath);
+        ObjectManager &addTexture(const std::string &filepath, TextureType type = TextureType::VKE_TEXTURE_TYPE_ALBEDO);
         VkeGameObject build(glm::vec3 translation = {0.f, 0.f, 0.f}, glm::vec3 scale = {1.f, 1.f, 1.f});
+
+        float getTextureCount() { return textureCount; }
 
     private:
         VkeDevice &vkeDevice;
-
-        const std::string defaultTexturePath;
+        float textureCount{0};
+        const std::string defaultTexturePath ="textures/default_albedo.jpg";
+        const std::string defaultNormalPath = "textures/default_normal.jpg";
+        const std::string defaultRoughnessPath = "textures/default_roughness.jpg";
+        const std::string defaultMetallicPath = "textures/default_metallic.jpg";
+        const std::string defaultAOPath = "textures/default_AO.jpg";
 
         std::shared_ptr<VkeModel> currentModel;
-        std::shared_ptr<VkeTexture> currentTexture;
+
+        std::shared_ptr<VkeTexture> currentAlbedo;
+        std::shared_ptr<VkeTexture> currentNormal;
+        std::shared_ptr<VkeTexture> currentRoughness;
+        std::shared_ptr<VkeTexture> currentMetallic;
+        std::shared_ptr<VkeTexture> currentAO;
     };
 } // namespace vke

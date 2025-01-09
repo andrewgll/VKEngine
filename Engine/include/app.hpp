@@ -5,6 +5,7 @@
 #include "device.hpp"
 #include "renderer.hpp"
 #include "descriptors.hpp"
+#include "object_manager.hpp"
 
 // std
 #include <memory>
@@ -15,8 +16,8 @@ namespace vke
     class App
     {
     public:
-        static constexpr int WIDTH = 800;
-        static constexpr int HEIGHT = 600;
+        static constexpr int WIDTH = 1920;
+        static constexpr int HEIGHT = 1080;
 
         App();
         ~App();
@@ -25,12 +26,14 @@ namespace vke
         App &operator=(const App &) = delete;
         void run();
 
+        ObjectManager objectManager{vkeDevice};
+
     private:
         VkDescriptorSet createDescriptorSet(VkeTexture &texture);
         void loadGameObjects();
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
-                            "PIZDEC"};
+                            "VKEngine v2"};
         VkeDevice vkeDevice{vkeWindow};
         VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
 

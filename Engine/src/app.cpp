@@ -29,7 +29,7 @@ namespace vke
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
                          .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * objectManager.getTextureCount())
                          .build();
     }
     App::~App()
@@ -53,12 +53,18 @@ namespace vke
         auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                                    .build();
-        auto textureSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                                    .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-                                    .build();
+
+        // for materials
+        auto materialSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                                     .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // albedo
+                                     .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // normal
+                                     .addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // roughness
+                                     .addBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // metallic
+                                     .addBinding(5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // ao
+                                     .build();
         std::vector<VkDescriptorSetLayout> setLayouts = {
             globalSetLayout->getDescriptorSetLayout(),
-            textureSetLayout->getDescriptorSetLayout()};
+            materialSetLayout->getDescriptorSetLayout()};
 
         std::vector<VkDescriptorSet> globalDescriptorSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < globalDescriptorSets.size(); i++)
@@ -71,18 +77,17 @@ namespace vke
 
         for (auto &gameObject : gameObjects)
         {
-            if(gameObject.second.texture == nullptr){
+            if (gameObject.second.material == nullptr)
+            {
                 continue;
             }
-            VkDescriptorImageInfo imageInfo{};
-            auto texture = gameObject.second.texture;
-            auto model = gameObject.second.model;
-            imageInfo.sampler = gameObject.second.texture->getSampler();
-            imageInfo.imageView = gameObject.second.texture->getImageView();
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            VkeDescriptorWriter(*textureSetLayout, *globalPool)
-                .writeImage(1, &imageInfo)
+            auto material = gameObject.second.material;
+            VkeDescriptorWriter(*materialSetLayout, *globalPool)
+                .writeImage(1, &material->albedo->getDescriptor())
+                .writeImage(2, &material->normal->getDescriptor())
+                .writeImage(3, &material->roughness->getDescriptor())
+                .writeImage(4, &material->metallic->getDescriptor())
+                .writeImage(5, &material->ao->getDescriptor())
                 .build(gameObject.second.descriptorSet);
         }
 
@@ -139,12 +144,11 @@ namespace vke
 
     void App::loadGameObjects()
     {
-        ObjectManager objectManager{vkeDevice, "textures/default.jpg"};
 
         auto skullObject = objectManager
                                .addModel("models/skull.obj")
                                .addTexture("textures/skull.jpg")
-                               .build({0.f, 0.5f, 0.f}, {.04f, .04f, .04f});
+                               .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
         gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
         auto eyeObject = objectManager
@@ -156,25 +160,36 @@ namespace vke
         auto gunObject = objectManager
                              .addModel("models/Gun.obj")
                              .addTexture("textures/Gun.jpg")
-                             .build({1.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
+                             .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
         gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
                         .addModel("models/quad.obj")
-                        .build({1.f, 1.f, 1.f}, {10.f, 10.f, 10.f});
+                        .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        // auto eyeObject = objectManager
-        //                      .addModel("models/eye.obj")
-        //                      .addTexture("textures/eye.jpg")
-        //                      .build();
-        // gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
+        auto sword = objectManager
+                         .addModel("models/sword.obj")
+                         .addTexture("textures/sword_albedo.jpg")
+                         .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                         .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                         .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                         .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        gameObjects.emplace(sword.getId(), std::move(sword));
+        float yPos = 4.f;
 
-        // auto quadObject = objectManager
-        //                       .addModel("models/quad.obj")
-        //                       .addTexture("textures/eye.jpg")
-        //                       .build();
-        // gameObjects.emplace(quadObject.getId(), std::move(quadObject));
+        
+      
+        auto phone4 = objectManager
+                          .addModel("models/phone.obj")
+                          .addTexture("textures/T_Telephone_Color.tga.png")
+                          .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                          .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+                          .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                           .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                          .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
+        gameObjects.emplace(phone4.getId(), std::move(phone4));
 
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},
@@ -187,7 +202,7 @@ namespace vke
 
         for (int i = 0; i < lightColors.size(); i++)
         {
-            auto pointLight = VkeGameObject::makePointLight(0.2f);
+            auto pointLight = VkeGameObject::makePointLight(0.3f);
             pointLight.color = lightColors[i];
             auto rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
             pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f, -1.f, -1.f, 1.f)};

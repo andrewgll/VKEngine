@@ -13,6 +13,24 @@
 
 namespace vke
 {
+    struct VkeMaterialFlags
+    {
+        bool hasAlbedo = false;
+        bool hasNormal = false;
+        bool hasRoughness = false;
+        bool hasMetallic = false;
+        bool hasAO = false;
+    }; 
+    struct VkeMaterial
+    {
+        std::shared_ptr<VkeTexture> albedo;
+        std::shared_ptr<VkeTexture> normal;
+        std::shared_ptr<VkeTexture> roughness;
+        std::shared_ptr<VkeTexture> metallic;
+        std::shared_ptr<VkeTexture> ao;
+        VkeMaterialFlags flags;
+    };
+
     struct TransformComponent
     {
         glm::vec3 translation{};
@@ -55,7 +73,7 @@ namespace vke
         }
 
         std::shared_ptr<VkeModel> model{};
-        std::shared_ptr<VkeTexture> texture;
+        std::shared_ptr<VkeMaterial> material;
         glm::vec3 color{};
         TransformComponent transform{};
         VkDescriptorSet descriptorSet{};

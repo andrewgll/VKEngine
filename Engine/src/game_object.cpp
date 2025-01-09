@@ -75,10 +75,18 @@ namespace vke
         auto writer = VkeDescriptorWriter(layout, globalDescriptorPool);
         auto bufferInfo = uboBuffer.descriptorInfo();
         writer.writeBuffer(0, &bufferInfo);
-        if (texture)
+        if (material)
         {
-            VkDescriptorImageInfo imageInfo = texture->getDescriptor();
-            writer.writeImage(1, &imageInfo);
+            VkDescriptorImageInfo albedoInfo = material->albedo->getDescriptor();
+            VkDescriptorImageInfo normalInfo = material->normal->getDescriptor();
+            VkDescriptorImageInfo roughnessInfo = material->roughness->getDescriptor();
+            VkDescriptorImageInfo metallicInfo = material->metallic->getDescriptor();
+            VkDescriptorImageInfo aoInfo = material->ao->getDescriptor();
+            writer.writeImage(1, &albedoInfo);
+            writer.writeImage(1, &normalInfo);
+            writer.writeImage(1, &roughnessInfo);
+            writer.writeImage(1, &metallicInfo);
+            writer.writeImage(1, &aoInfo);
         }
         if (!writer.build(descriptorSet))
         {
