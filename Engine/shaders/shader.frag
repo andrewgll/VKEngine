@@ -19,6 +19,11 @@ struct PointLight {
     vec4 position; // w is unused
     vec4 color;    // w is intensity
 };
+struct DirectionalLight {
+    vec3 direction; // Direction towards the light source
+    vec3 color;     // RGB color of the light
+    float intensity; // Intensity of the light
+};
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
@@ -26,6 +31,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 invView;
     vec4 ambientLightColor; // w is intensity
     PointLight pointLights[10];
+    DirectionalLight dirLight;
     int numLights;
 } ubo;
 
@@ -117,12 +123,36 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
+     // Calculate Directional Light Contribution
+    vec3 L_dir = normalize(-ubo.dirLight.direction); // Light direction (towards light)
+    vec3 H_dir = normalize(V + L_dir);
+    vec3 radiance_dir = ubo.dirLight.color * ubo.dirLight.intensity;
+
+    float NDF_dir = DistributionGGX(N, H_dir, roughness);
+    float G_dir = GeometrySmith(N, V, L_dir, roughness);
+    vec3 F_dir = fresnelSchlick(max(dot(H_dir, V), 0.0), F0);
+
+    vec3 nominator_dir = NDF_dir * G_dir * F_dir;
+    float denominator_dir = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L_dir), 0.0) + 0.001;
+    vec3 specular_dir = nominator_dir / denominator_dir;
+
+    vec3 kS_dir = F_dir;
+    vec3 kD_dir = vec3(1.0) - kS_dir;
+    kD_dir *= 1.0 - metallic;
+
+    float NdotL_dir = max(dot(N, L_dir), 0.0);
+    Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
+
+    // Ambient Lighting
     vec3 ambient = (ubo.ambientLightColor.rgb * ubo.ambientLightColor.a) * albedo * ao;
-    vec3 color = ambient + Lo;
+    vec3 color = ambient * ao + Lo; 
+
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 
-    color *= ao; 
-    outColor = vec4(color, 1.0);
+    outColor = vec4(color,  1);
+
+    // outColor = vec4(ubo.dirLight., 1.0);
 }
