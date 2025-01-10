@@ -15,6 +15,13 @@ namespace vke
         glm::vec4 position{};
         glm::vec4 color{};
     };
+    struct DirectionalLight
+    {
+        glm::vec3 direction{-1.f, -1.f, 0.f}; // Direction towards the light source
+        float padding1;
+        glm::vec3 color{0.f, 1.f, 0.f};       // RGB color of the light
+        float intensity{255.f};                // Intensity of the light
+    };
     // global uniform buffer object
     // like a push constant, but for uniform buffers
     struct GlobalUbo
@@ -22,8 +29,9 @@ namespace vke
         glm::mat4 projection{1.f};
         glm::mat4 view{1.f};
         glm::mat4 inverseView{1.f};                  // to transform value from camera to world space
-        glm::vec4 ambientLight{1.f, 1.f, 1.f, .02f}; // w is intensity
+        glm::vec4 ambientLight{1.f, 1.f, 1.f, .03f}; // w is intensity
         PointLight pointLights[MAX_LIGHTS];
+        DirectionalLight dirLight;
         int numLights;
     };
     struct FrameInfo

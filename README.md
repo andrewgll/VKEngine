@@ -2,15 +2,16 @@ Hi. This is my attempt to learn Vulkan and write my own small engine from scratc
 
 The Engine uses these conventions: Z forward, -Y up, triangulate faces.
 
-Dependencies you need to run this engine:
+Dependencies you need to build this engine:
 * [VulkanSDK](https://vulkan.lunarg.com/sdk/home)
 * [GLFW](https://www.glfw.org/)
 * [tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader/blob/release/tiny_obj_loader.h)
 * [Make](https://www.gnu.org/software/make/)
 * [GLM](https://github.com/g-truc/glm)
+* [stb image loader](https://github.com/nothings/stb/blob/master/stb_image.h)
 * GLSLC(Should be included with VulkanSDK)
 
-For now Makefile is compatible only with MacOS and homebrew.
+For now Makefile is compatible only with MacOS and homebrew(Support for windows will be added later).
 ## How to build:
 ```sh
 make
@@ -26,7 +27,7 @@ To run:
 
 
 ## So far these are my milestones:
-### 0.18 Physically based rendering(PBR)
+### 0.18 Physically based rendering(PBR), directional light
 ![VK](https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png)
 ### 0.17 Multiple Texture loader, ObjManager, time in shaders
 ![VK](https://i.ibb.co/ZMp7GP4/Screenshot-2025-01-07-at-13-11-29.png)

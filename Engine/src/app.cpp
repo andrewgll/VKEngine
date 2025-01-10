@@ -126,6 +126,10 @@ namespace vke
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
+                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f)); 
+                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);                        
+                ubo.dirLight.intensity = 1.0f;                                           
+
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
@@ -179,8 +183,6 @@ namespace vke
         gameObjects.emplace(sword.getId(), std::move(sword));
         float yPos = 4.f;
 
-        
-      
         auto phone4 = objectManager
                           .addModel("models/phone.obj")
                           .addTexture("textures/T_Telephone_Color.tga.png")
