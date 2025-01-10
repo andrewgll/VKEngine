@@ -37,6 +37,7 @@ namespace vke
     }
     void App::run()
     {
+        glfwSetInputMode(vkeWindow.getGLWFWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         std::vector<std::unique_ptr<VkeBuffer>> uboBuffers(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < uboBuffers.size(); i++)
