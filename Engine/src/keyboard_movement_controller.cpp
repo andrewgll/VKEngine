@@ -2,26 +2,33 @@
 
 namespace vke
 {
-
     void KeyboardMovementController::moveInPlainXZ(GLFWwindow *window, float dt, VkeGameObject &gameObject)
     {
-        glm::vec3 rotate{0.f};
-        if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS)
-            rotate.y += 1.f;
-        if (glfwGetKey(window, keys.lookLeft) == GLFW_PRESS)
-            rotate.y -= 1.f;
-        if (glfwGetKey(window, keys.lookUp) == GLFW_PRESS)
-            rotate.x += 1.f;
-        if (glfwGetKey(window, keys.lookDown) == GLFW_PRESS)
-            rotate.x -= 1.f;
+        static bool firstMouse = true;
+        static double lastX, lastY;
 
-        // only if rotate is not zero
-        if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        if (firstMouse)
         {
-            gameObject.transform.rotation += glm::normalize(rotate) * lookSpeed * dt;
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
         }
 
-        // limit the rotation
+        double xoffset = xpos - lastX;
+        double yoffset = lastY - ypos;
+        lastX = xpos;
+        lastY = ypos;
+
+        float sensitivity = 0.05f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        gameObject.transform.rotation.y += static_cast<float>(xoffset) * lookSpeed * dt;
+        gameObject.transform.rotation.x += static_cast<float>(yoffset) * lookSpeed * dt;
+
         gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
         gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
 
@@ -43,11 +50,10 @@ namespace vke
             moveDir += upDir;
         if (glfwGetKey(window, keys.moveDown) == GLFW_PRESS)
             moveDir -= upDir;
-        // only if movement is not zero
+
         if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon())
         {
             gameObject.transform.translation += glm::normalize(moveDir) * moveSpeed * dt;
         }
     }
-
 } // namespace vke
