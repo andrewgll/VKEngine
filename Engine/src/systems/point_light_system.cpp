@@ -126,7 +126,7 @@ namespace vke
         for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
             // use game obj to find light object
-            auto &obj = frameInfo.gameObjects.at(it->second);
+            auto &obj = frameInfo.lights.at(it->second);
 
             PointLightPushConstants push{};
             push.position = glm::vec4(obj.transform.translation, 1.f);

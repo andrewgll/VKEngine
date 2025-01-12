@@ -5,6 +5,8 @@ layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUv;
 
+layout(set = 0, binding = 1) uniform sampler2D shadowMap; 
+
 layout(set = 1, binding = 1) uniform sampler2D albedoTexture;
 layout(set = 1, binding = 2) uniform sampler2D normalTexture;
 layout(set = 1, binding = 3) uniform sampler2D roughnessTexture;
@@ -29,11 +31,13 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
     mat4 invView;
-    vec4 ambientLightColor; // w is intensity
+    vec4 ambientLightColor;
     PointLight pointLights[10];
     DirectionalLight dirLight;
+    mat4 lightViewProj; 
     int numLights;
 } ubo;
+
 
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
@@ -83,6 +87,26 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
+float calculateShadow(vec4 fragPosLightSpace) {
+    
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    
+    projCoords = projCoords * 0.5 + 0.5;
+
+    
+    if (projCoords.z > 1.0) return 0.0;
+
+    
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
+    float currentDepth = projCoords.z;
+
+    
+    float bias = max(0.05 * (1.0 - dot(fragNormalWorld, ubo.dirLight.direction)), 0.005);
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
 
 void main() {
     vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); // sRGB to linear
@@ -125,6 +149,8 @@ void main() {
 
      // Calculate Directional Light Contribution
     vec3 L_dir = normalize(-ubo.dirLight.direction); // Light direction (towards light)
+    float shadow = calculateShadow(ubo.lightViewProj * vec4(fragPosWorld, 1.0)); 
+    shadow = 1.0 - shadow;
     vec3 H_dir = normalize(V + L_dir);
     vec3 radiance_dir = ubo.dirLight.color * ubo.dirLight.intensity;
 
@@ -141,7 +167,7 @@ void main() {
     kD_dir *= 1.0 - metallic;
 
     float NdotL_dir = max(dot(N, L_dir), 0.0);
-    Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    Lo += shadow*(kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
     // Ambient Lighting
@@ -154,5 +180,4 @@ void main() {
 
     outColor = vec4(color,  1);
 
-    // outColor = vec4(ubo.dirLight., 1.0);
 }

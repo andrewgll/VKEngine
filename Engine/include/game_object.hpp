@@ -20,7 +20,7 @@ namespace vke
         bool hasRoughness = false;
         bool hasMetallic = false;
         bool hasAO = false;
-    }; 
+    };
     struct VkeMaterial
     {
         std::shared_ptr<VkeTexture> albedo;
@@ -41,11 +41,6 @@ namespace vke
         glm::mat3 normalMatrix();
     };
 
-    struct PointLightComponent
-    {
-        float lightIntensity{1.f};
-    };
-
     class VkeGameObject
     {
     public:
@@ -57,8 +52,6 @@ namespace vke
             static id_t currentId = 0;
             return VkeGameObject{currentId++};
         }
-
-        static VkeGameObject makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
 
         VkeGameObject(const VkeGameObject &) = delete;
         VkeGameObject &operator=(const VkeGameObject &) = delete;
@@ -77,8 +70,6 @@ namespace vke
         glm::vec3 color{};
         TransformComponent transform{};
         VkDescriptorSet descriptorSet{};
-        std::unique_ptr<PointLightComponent>
-            pointLight = nullptr;
 
     private:
         VkeGameObject(id_t objId) : id{objId} {}

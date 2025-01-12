@@ -12,16 +12,6 @@
 
 namespace vke
 {
-    struct SimplePushConstantData
-    {
-        glm::mat4 modelMatrix{1.f};
-        glm::mat4 normalMatrix{1.f};
-        bool hasNormalMap{false};
-        // float time{0.f};
-
-        // padding to 16 bytes
-        int padding[3] = {0, 0, 0};
-    };
     RenderSystem::RenderSystem(VkeDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> &setLayouts) : vkeDevice{device}
     {
         createPipelineLayout(setLayouts);

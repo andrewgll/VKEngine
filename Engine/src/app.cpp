@@ -4,10 +4,14 @@
 #include "camera.hpp"
 #include "systems/render_system.hpp"
 #include "systems/point_light_system.hpp"
+#include "systems/shadowmap_system.hpp"
 #include "buffer.hpp"
 #include "object_manager.hpp"
+#include "light_object.hpp"
+#include "texture_sampler.hpp"
 
 #define MAX_FRAME_TIME 0.1f
+#define SHADOWMAP_DIM 2048
 
 // libs
 #define GLM_FORCE_RADIANT
@@ -26,6 +30,7 @@ namespace vke
     App::App()
     {
         loadGameObjects();
+        loadLights();
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
                          .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -52,7 +57,8 @@ namespace vke
         }
 
         auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)         // Existing UBO
+                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Shadow map
                                    .build();
 
         // for materials
@@ -74,6 +80,16 @@ namespace vke
             VkeDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
                 .build(globalDescriptorSets[i]);
+
+            VkDescriptorImageInfo shadowMapInfo{};
+            shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            shadowMapInfo.imageView = createShadowMapImageView(vkeDevice, SHADOWMAP_DIM);
+            shadowMapInfo.sampler = TextureSampler(vkeDevice).getSampler();
+
+            VkeDescriptorWriter(*globalSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)   
+                .writeImage(1, &shadowMapInfo) 
+                .build(globalDescriptorSets[i]);
         }
 
         for (auto &gameObject : gameObjects)
@@ -94,6 +110,7 @@ namespace vke
 
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
         PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+        ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), globalSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}, vkeRenderer.getShadowMapFrameBuffer(0)};
 
         VkeCamera camera{};
         auto viewerObject = VkeGameObject::createGameObject();
@@ -121,15 +138,15 @@ namespace vke
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
                 float currentTimeInSeconds = std::chrono::duration<float, std::chrono::seconds::period>(currentTime.time_since_epoch()).count();
-                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
+                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects, lights};
                 // update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f)); 
-                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);                        
-                ubo.dirLight.intensity = 1.0f;                                           
+                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f));
+                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
+                ubo.dirLight.intensity = 1.0f;
 
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
@@ -190,27 +207,38 @@ namespace vke
                           .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
                           .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
                           .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                           .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                          .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
                           .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
         gameObjects.emplace(phone4.getId(), std::move(phone4));
-
+    }
+    void App::loadLights()
+    {
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},
             {.1f, .1f, 1.f},
             {.1f, 1.f, .1f},
             {1.f, 1.f, .1f},
             {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f} //
-        };
+            {1.f, 1.f, 1.f}};
 
         for (int i = 0; i < lightColors.size(); i++)
         {
-            auto pointLight = VkeGameObject::makePointLight(0.3f);
-            pointLight.color = lightColors[i];
-            auto rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
-            pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f, -1.f, -1.f, 1.f)};
-            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+            glm::mat4 rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
+            glm::vec3 lightPosition = glm::vec3{rotate * glm::vec4(0.f, 10.f, 0.f, 1.f)};
+
+            glm::vec3 lightDirection = glm::normalize(glm::vec3(0.f, -1.f, 0.f) - lightPosition);
+
+            vke::Light lightObject(
+                lightPosition,  // Light position
+                lightDirection, // Light direction
+                lightColors[i], // Light color
+                1.0f,           // Intensity
+                0.1f,           // Near plane
+                50.f            // Far plane
+            );
+
+            lightObject.setOrthographic(true, 20.0f);
+            lights.push_back(std::move(lightObject));
         }
     }
-
 }

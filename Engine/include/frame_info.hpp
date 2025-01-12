@@ -2,6 +2,7 @@
 
 #include "camera.hpp"
 #include "game_object.hpp"
+#include "light_object.hpp"
 
 // libs
 #include "vulkan/vulkan.h"
@@ -43,5 +44,6 @@ namespace vke
         VkeCamera &camera;
         VkDescriptorSet globalDescriptorSet;
         VkeGameObject::Map &gameObjects;
+        std::vector<Light>lights;
     };
 } // namespace vke

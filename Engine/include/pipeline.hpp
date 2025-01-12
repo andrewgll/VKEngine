@@ -44,7 +44,8 @@ namespace vke
 
         void bind(VkCommandBuffer commandBuffer);
 
-        static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo, float depthBiasConstantFactor = 0.f, float depthBiasSlopeFactor = 0.f);
+        static void defaultShadowPipelineConfigInfo(PipelineConfigInfo &configInfo);
         static void enableAlphaBlending(PipelineConfigInfo &configInfo);
 
     private:
@@ -55,7 +56,6 @@ namespace vke
             const PipelineConfigInfo &configInfo);
 
         void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
-
         VkeDevice &vkeDevice;
         VkPipeline graphicsPipeline;
         VkShaderModule vertShaderModule;

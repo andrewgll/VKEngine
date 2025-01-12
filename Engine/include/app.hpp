@@ -6,6 +6,7 @@
 #include "renderer.hpp"
 #include "descriptors.hpp"
 #include "object_manager.hpp"
+#include "light_object.hpp"
 
 // std
 #include <memory>
@@ -31,6 +32,7 @@ namespace vke
     private:
         VkDescriptorSet createDescriptorSet(VkeTexture &texture);
         void loadGameObjects();
+        void loadLights();
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
                             "VKEngine v2"};
@@ -39,5 +41,6 @@ namespace vke
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
         VkeGameObject::Map gameObjects;
+        std::vector <Light> lights;
     };
 } // namespace vke

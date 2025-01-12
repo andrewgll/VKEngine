@@ -21,6 +21,9 @@ namespace vke
         VkeRenderer &operator=(const VkeRenderer &) = delete;
 
         VkRenderPass getSwapChainRenderPass() const { return vkeSwapChain->getRenderPass(); }
+        VkRenderPass getShadowMapRenderPass() const { return vkeSwapChain->getShadowRenderPass(); }
+        VkFramebuffer getSwapChainFrameBuffer(int index) const { return vkeSwapChain->getFrameBuffer(index); }
+        VkFramebuffer getShadowMapFrameBuffer(int index) const { return vkeSwapChain->getShadowMapFrameBuffer(index); }
         float getAspectRatio() const { return vkeSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; }
 

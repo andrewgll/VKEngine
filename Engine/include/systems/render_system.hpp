@@ -11,6 +11,16 @@
 
 namespace vke
 {
+    struct SimplePushConstantData
+    {
+        glm::mat4 modelMatrix{1.f};
+        glm::mat4 normalMatrix{1.f};
+        bool hasNormalMap{false};
+        // float time{0.f};
+
+        // padding to 16 bytes
+        int padding[3] = {0, 0, 0};
+    };
     class RenderSystem
     {
     public:
