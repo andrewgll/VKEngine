@@ -20,8 +20,8 @@ namespace vke
     {
         glm::vec3 direction{-1.f, -1.f, 0.f}; // Direction towards the light source
         float padding1;
-        glm::vec3 color{0.f, 1.f, 0.f};       // RGB color of the light
-        float intensity{255.f};                // Intensity of the light
+        glm::vec3 color{0.f, 1.f, 0.f}; // RGB color of the light
+        float intensity{255.f};         // Intensity of the light
     };
     // global uniform buffer object
     // like a push constant, but for uniform buffers
@@ -44,6 +44,6 @@ namespace vke
         VkeCamera &camera;
         VkDescriptorSet globalDescriptorSet;
         VkeGameObject::Map &gameObjects;
-        std::vector<Light>lights;
+        std::vector<LightObject> lightObjects;
     };
 } // namespace vke

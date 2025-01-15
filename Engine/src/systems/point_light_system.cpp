@@ -76,20 +76,18 @@ namespace vke
         auto rotate = glm::rotate(glm::mat4(1.f), frameInfo.frameTime, {0.f, -1.f, 0.f});
 
         int lightIndex = 0;
-        for (auto &kv : frameInfo.gameObjects)
+        for (auto &lightObject : frameInfo.lightObjects)
         {
-            auto &obj = kv.second;
-            if (obj.pointLight == nullptr)
-                continue;
+
 
             assert(lightIndex < MAX_LIGHTS && "Exceeded max point lights");
 
             // update point light position
-            obj.transform.translation = glm::vec3(rotate * glm::vec4(obj.transform.translation, 1.f));
+            lightObject.position = glm::vec3(rotate * glm::vec4(lightObject.position, 1.f));
 
             // copy light to ubo
-            ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
-            ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+            ubo.pointLights[lightIndex].position = glm::vec4(lightObject.position, 1.f);
+            ubo.pointLights[lightIndex].color = glm::vec4(lightObject.color, lightObject.intensity);
 
             lightIndex++;
         }
@@ -99,15 +97,10 @@ namespace vke
     void PointLightSystem::render(FrameInfo &frameInfo)
     {
         // sort lights
-        std::map<float, VkeGameObject::id_t> sorted;
-        for (auto &kv : frameInfo.gameObjects)
+        for (auto &lightObject : frameInfo.lightObjects)
         {
-            auto &obj = kv.second;
-            if (obj.pointLight == nullptr)
-                continue;
-            auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+            auto offset = frameInfo.camera.getPosition() - lightObject.position;
             float disSquared = glm::dot(offset, offset);
-            sorted[disSquared] = obj.getId();
         }
 
         // render
@@ -122,16 +115,13 @@ namespace vke
             &frameInfo.globalDescriptorSet,
             0,
             nullptr);
-        // iterate through sorted lights in reverse order
-        for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
+        for (auto &lightObject : frameInfo.lightObjects)
         {
-            // use game obj to find light object
-            auto &obj = frameInfo.lights.at(it->second);
 
             PointLightPushConstants push{};
-            push.position = glm::vec4(obj.transform.translation, 1.f);
-            push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-            push.radius = obj.transform.scale.x;
+            push.position = glm::vec4(lightObject.position, 1.f);
+            push.color = glm::vec4(lightObject.color, lightObject.intensity);
+            push.radius = lightObject.scale.x;
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,

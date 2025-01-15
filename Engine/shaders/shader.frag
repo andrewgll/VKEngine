@@ -147,8 +147,8 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
-     // Calculate Directional Light Contribution
-    vec3 L_dir = normalize(-ubo.dirLight.direction); // Light direction (towards light)
+     // Calculate Directional LightObject Contribution
+    vec3 L_dir = normalize(-ubo.dirLight.direction); // LightObject direction (towards light)
     float shadow = calculateShadow(ubo.lightViewProj * vec4(fragPosWorld, 1.0)); 
     shadow = 1.0 - shadow;
     vec3 H_dir = normalize(V + L_dir);
@@ -167,7 +167,8 @@ void main() {
     kD_dir *= 1.0 - metallic;
 
     float NdotL_dir = max(dot(N, L_dir), 0.0);
-    Lo += shadow*(kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    // Lo += shadow*(kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
     // Ambient Lighting
@@ -177,7 +178,5 @@ void main() {
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-
-    outColor = vec4(color,  1);
 
 }

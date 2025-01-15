@@ -5,19 +5,20 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <cassert>
 #include <limits>
 #include <set>
 #include <stdexcept>
 
 namespace vke
 {
-  VkeSwapChain::VkeSwapChain(VkeDevice &deviceRef, VkExtent2D extent)
-      : device{deviceRef}, windowExtent{extent}
+  VkeSwapChain::VkeSwapChain(VkeDevice &deviceRef, VkExtent2D extent, VkExtent2D shadowExtent)
+      : device{deviceRef}, windowExtent{extent}, shadowMapExtent{shadowExtent}
   {
     init();
   }
-  VkeSwapChain::VkeSwapChain(VkeDevice &deviceRef, VkExtent2D extent, std::shared_ptr<VkeSwapChain> previous)
-      : device{deviceRef}, windowExtent{extent}, oldSwapChain{previous}
+  VkeSwapChain::VkeSwapChain(VkeDevice &deviceRef, VkExtent2D extent, VkExtent2D shadowExtent, std::shared_ptr<VkeSwapChain> previous)
+      : device{deviceRef}, windowExtent{extent}, shadowMapExtent{shadowExtent}, oldSwapChain{previous}
   {
     init();
 
@@ -30,10 +31,13 @@ namespace vke
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createShadowMapRenderPass();
     createDepthResources();
     createFramebuffers();
+
+    createShadowMapRenderPass();
+    createShadowDepthImage();
     createShadowMapFramebuffers();
+    
     createSyncObjects();
   }
 
@@ -72,6 +76,19 @@ namespace vke
       vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
       vkDestroyFence(device.device(), inFlightFences[i], nullptr);
     }
+
+    // if (shadowDepthImageView != VK_NULL_HANDLE)
+    // {
+    //   vkDestroyImageView(device.device(), shadowDepthImageView, nullptr);
+    // }
+    // if (shadowImage != VK_NULL_HANDLE)
+    // {
+    //   vkDestroyImage(device.device(), shadowImage, nullptr);
+    // }
+    // if (shadowImageMemory != VK_NULL_HANDLE)
+    // {
+    //   vkFreeMemory(device.device(), shadowImageMemory, nullptr);
+    // }
   }
 
   VkResult VkeSwapChain::acquireNextImage(uint32_t *imageIndex)
@@ -237,33 +254,58 @@ namespace vke
   }
   void VkeSwapChain::createShadowMapRenderPass()
   {
-    VkAttachmentDescription depthAttachment{};
-    depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+    VkAttachmentDescription attachmentDescription{};
+    attachmentDescription.format = VK_FORMAT_D16_UNORM;
+    attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+    attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
-    VkAttachmentReference depthAttachmentRef{};
-    depthAttachmentRef.attachment = 0;
-    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference depthReference = {};
+    depthReference.attachment = 0;
+    depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription subpass{};
+    VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 0;
-    subpass.pDepthStencilAttachment = &depthAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthReference;
 
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    std::array<VkSubpassDependency, 2> dependencies;
+
+    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[0].dstSubpass = 0;
+    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    dependencies[1].srcSubpass = 0;
+    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    VkRenderPassCreateInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.attachmentCount = 1;
+    renderPassInfo.pAttachments = &attachmentDescription;
+    renderPassInfo.subpassCount = 1;
+    renderPassInfo.pSubpasses = &subpass;
+    renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+    renderPassInfo.pDependencies = dependencies.data();
+
+    if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &shadowRenderPass) != VK_SUCCESS)
+    {
+      throw std::runtime_error("failed to create shadow render pass");
+    }
   }
+
   void VkeSwapChain::createRenderPass()
   {
     VkAttachmentDescription depthAttachment{};
@@ -328,7 +370,9 @@ namespace vke
   }
   void VkeSwapChain::createShadowMapFramebuffers()
   {
-    shadowMapFramebuffers.resize(1);
+    assert(shadowRenderPass != VK_NULL_HANDLE && "shadowRenderPass is invalid!");
+    assert(shadowDepthImageView != VK_NULL_HANDLE && "shadowDepthImageView is invalid!");
+
 
     VkFramebufferCreateInfo framebufferInfo = {};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -339,7 +383,7 @@ namespace vke
     framebufferInfo.height = shadowMapExtent.height;
     framebufferInfo.layers = 1;
 
-    if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &shadowMapFramebuffers[0]) != VK_SUCCESS)
+    if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &shadowMapFramebuffer) != VK_SUCCESS)
     {
       throw std::runtime_error("failed to create shadow map framebuffer!");
     }
@@ -370,6 +414,56 @@ namespace vke
       {
         throw std::runtime_error("failed to create framebuffer!");
       }
+    }
+  }
+  void VkeSwapChain::createShadowDepthImage()
+  {
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = shadowMapExtent.width;
+    imageInfo.extent.height = shadowMapExtent.height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.format = VK_FORMAT_D16_UNORM; // Depth format
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    // imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(device.device(), &imageInfo, nullptr, &shadowImage) != VK_SUCCESS)
+    {
+      throw std::runtime_error("failed to create shadow image!");
+    }
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(device.device(), shadowImage, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = device.findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (vkAllocateMemory(device.device(), &allocInfo, nullptr, &shadowImageMemory) != VK_SUCCESS)
+    {
+      throw std::runtime_error("failed to allocate memory for shadow image!");
+    }
+
+    vkBindImageMemory(device.device(), shadowImage, shadowImageMemory, 0);
+    VkImageViewCreateInfo depthStencilView{};
+    depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    depthStencilView.format = VK_FORMAT_D16_UNORM;
+    depthStencilView.subresourceRange = {};
+    depthStencilView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    depthStencilView.subresourceRange.baseMipLevel = 0;
+    depthStencilView.subresourceRange.levelCount = 1;
+    depthStencilView.subresourceRange.baseArrayLayer = 0;
+    depthStencilView.subresourceRange.layerCount = 1;
+    depthStencilView.image = shadowImage;
+
+    if (vkCreateImageView(device.device(), &depthStencilView, nullptr, &shadowDepthImageView) != VK_SUCCESS)
+    {
+      throw std::runtime_error("failed to create shadow depth image view!");
     }
   }
 

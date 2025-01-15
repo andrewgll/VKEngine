@@ -8,6 +8,8 @@
 #include "object_manager.hpp"
 #include "light_object.hpp"
 
+#define SHADOWMAP_DIM 2048
+
 // std
 #include <memory>
 #include <vector>
@@ -41,6 +43,6 @@ namespace vke
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
         VkeGameObject::Map gameObjects;
-        std::vector <Light> lights;
+        std::vector<LightObject> lights;
     };
 } // namespace vke

@@ -33,7 +33,7 @@ namespace vke
         loadLights();
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
                          .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * lights.size()) // Increase if needed
                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * objectManager.getTextureCount())
                          .build();
     }
@@ -76,19 +76,15 @@ namespace vke
         std::vector<VkDescriptorSet> globalDescriptorSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < globalDescriptorSets.size(); i++)
         {
+            VkDescriptorImageInfo shadowMapInfo{};
+            shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            shadowMapInfo.imageView = vkeRenderer.getShadowMapDepthImageView();
+            shadowMapInfo.sampler = TextureSampler(vkeDevice).getSampler();
+
             auto bufferInfo = uboBuffers[i]->descriptorInfo();
             VkeDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
-                .build(globalDescriptorSets[i]);
-
-            VkDescriptorImageInfo shadowMapInfo{};
-            shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            shadowMapInfo.imageView = createShadowMapImageView(vkeDevice, SHADOWMAP_DIM);
-            shadowMapInfo.sampler = TextureSampler(vkeDevice).getSampler();
-
-            VkeDescriptorWriter(*globalSetLayout, *globalPool)
-                .writeBuffer(0, &bufferInfo)   
-                .writeImage(1, &shadowMapInfo) 
+                .writeImage(1, &shadowMapInfo)
                 .build(globalDescriptorSets[i]);
         }
 
@@ -110,7 +106,7 @@ namespace vke
 
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
         PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
-        ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), globalSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}, vkeRenderer.getShadowMapFrameBuffer(0)};
+        ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), globalSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}};
 
         VkeCamera camera{};
         auto viewerObject = VkeGameObject::createGameObject();
@@ -152,11 +148,14 @@ namespace vke
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
                 // render
+                vkeRenderer.beginShadowSwapChainRenderPass(commandBuffer);
+                shadowMapSystem.renderShadowMaps(frameInfo);
+                vkeRenderer.endSwapChainRenderPass(commandBuffer);
+
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
 
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
-
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -190,35 +189,35 @@ namespace vke
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        auto sword = objectManager
-                         .addModel("models/sword.obj")
-                         .addTexture("textures/sword_albedo.jpg")
-                         .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                         .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                         .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                         .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        gameObjects.emplace(sword.getId(), std::move(sword));
-        float yPos = 4.f;
+        // auto sword = objectManager
+        //                  .addModel("models/sword.obj")
+        //                  .addTexture("textures/sword_albedo.jpg")
+        //                  .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+        //                  .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+        //                  .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+        //                  .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+        //                  .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        // gameObjects.emplace(sword.getId(), std::move(sword));
+        // float yPos = 4.f;
 
-        auto phone4 = objectManager
-                          .addModel("models/phone.obj")
-                          .addTexture("textures/T_Telephone_Color.tga.png")
-                          .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
-                          .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
-        gameObjects.emplace(phone4.getId(), std::move(phone4));
+        // auto phone4 = objectManager
+        //                   .addModel("models/phone.obj")
+        //                   .addTexture("textures/T_Telephone_Color.tga.png")
+        //                   .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+        //                   .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+        //                   .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+        //                   .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+        //                   .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
+        // gameObjects.emplace(phone4.getId(), std::move(phone4));
     }
     void App::loadLights()
     {
         std::vector<glm::vec3> lightColors{
-            {1.f, .1f, .1f},
-            {.1f, .1f, 1.f},
-            {.1f, 1.f, .1f},
-            {1.f, 1.f, .1f},
-            {.1f, 1.f, 1.f},
+            // {1.f, .1f, .1f},
+            // {.1f, .1f, 1.f},
+            // {.1f, 1.f, .1f},
+            // {1.f, 1.f, .1f},
+            // {.1f, 1.f, 1.f},
             {1.f, 1.f, 1.f}};
 
         for (int i = 0; i < lightColors.size(); i++)
@@ -228,10 +227,10 @@ namespace vke
 
             glm::vec3 lightDirection = glm::normalize(glm::vec3(0.f, -1.f, 0.f) - lightPosition);
 
-            vke::Light lightObject(
-                lightPosition,  // Light position
-                lightDirection, // Light direction
-                lightColors[i], // Light color
+            vke::LightObject lightObject(
+                lightPosition,  // LightObject position
+                lightDirection, // LightObject direction
+                lightColors[i], // LightObject color
                 1.0f,           // Intensity
                 0.1f,           // Near plane
                 50.f            // Far plane

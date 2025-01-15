@@ -22,8 +22,9 @@ namespace vke
 
         VkRenderPass getSwapChainRenderPass() const { return vkeSwapChain->getRenderPass(); }
         VkRenderPass getShadowMapRenderPass() const { return vkeSwapChain->getShadowRenderPass(); }
+        VkImageView getShadowMapDepthImageView() const { return vkeSwapChain->getShadowDepthImageView(); }
         VkFramebuffer getSwapChainFrameBuffer(int index) const { return vkeSwapChain->getFrameBuffer(index); }
-        VkFramebuffer getShadowMapFrameBuffer(int index) const { return vkeSwapChain->getShadowMapFrameBuffer(index); }
+        VkFramebuffer getShadowMapFrameBuffer() const { return vkeSwapChain->getShadowMapFrameBuffer(); }
         float getAspectRatio() const { return vkeSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; }
 
@@ -41,6 +42,7 @@ namespace vke
         VkCommandBuffer beginFrame();
         void endFrame();
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
+        void beginShadowSwapChainRenderPass(VkCommandBuffer commandBuffer);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
     private:

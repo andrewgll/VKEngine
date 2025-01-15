@@ -3,12 +3,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "game_object.hpp"
+
 namespace vke
 {
-    class Light
+    class LightObject
     {
     public:
-        Light(glm::vec3 position, glm::vec3 direction, glm::vec3 color, float intensity, float nearPlane, float farPlane, float fieldOfView = 45.0f)
+        LightObject(glm::vec3 position, glm::vec3 direction, glm::vec3 color, float intensity, float nearPlane, float farPlane, float fieldOfView = 45.0f)
             : position(position), direction(glm::normalize(direction)), color(color), intensity(intensity),
               nearPlane(nearPlane), farPlane(farPlane), fieldOfView(fieldOfView) {}
 
@@ -23,13 +25,13 @@ namespace vke
 
             if (isOrthographic)
             {
-                float orthoSize = 10.0f; 
+                float orthoSize = 10.0f;
                 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
             }
             else
             {
                 lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
-                lightProjection[1][1] *= -1; 
+                lightProjection[1][1] *= -1;
             }
 
             return lightProjection * lightView;
@@ -47,10 +49,11 @@ namespace vke
             aspectRatio = aspect;
             isOrthographic = false;
         }
-
         glm::vec3 position;
         glm::vec3 direction;
+        glm::vec3 scale{1.f, 1.f, 1.f};
         glm::vec3 color;
+        
         float intensity;
 
         float nearPlane;

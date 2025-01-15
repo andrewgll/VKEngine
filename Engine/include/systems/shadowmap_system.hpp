@@ -12,7 +12,7 @@
 
 namespace vke
 {
-    VkImageView createShadowMapImageView(VkeDevice &device, int shadowMapExtent);
+    VkImageView createShadowMapImageView(VkeDevice &device, int shadowMapExtent, VkImage &shadowMapImage);
     struct ShadowMapPushConstants
     {
         glm::mat4 modelMatrix{1.f};
@@ -26,27 +26,25 @@ namespace vke
             VkeDevice &device,
             VkRenderPass shadowRenderPass,
             VkDescriptorSetLayout globalSetLayout,
-            VkExtent2D shadowMapExtent,
-            VkFramebuffer shadowMapFramebuffer);
+            VkExtent2D shadowMapExtent);
         ~ShadowMapSystem();
 
         ShadowMapSystem(const ShadowMapSystem &) = delete;
         ShadowMapSystem &operator=(const ShadowMapSystem &) = delete;
 
         void renderShadowMaps(FrameInfo &frameInfo);
-        
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout &setLayout);
         void createPipeline(VkRenderPass renderPass);
-
+        VkImageView createShadowMapImageView(VkeDevice &device, int shadowMapExtent);
+        void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask);
         VkeDevice &vkeDevice;
         std::unique_ptr<VkePipeline> vkePipeline;
         VkPipelineLayout pipelineLayout;
 
         // Shadow map specific resources
         VkRenderPass shadowRenderPass;      // Render pass for shadow map rendering
-        VkFramebuffer shadowMapFramebuffer; // Framebuffer for shadow maps
         VkExtent2D shadowMapExtent;         // Resolution of the shadow map
     };
 } // namespace vke

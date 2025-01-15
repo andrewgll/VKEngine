@@ -24,10 +24,10 @@ namespace vke
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.maxAnisotropy = 16.0f;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = 100.f;
-        samplerInfo.maxAnisotropy = 16.0f;
 
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;

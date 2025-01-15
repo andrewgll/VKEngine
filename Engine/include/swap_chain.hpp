@@ -18,21 +18,23 @@ namespace vke
   public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-    VkeSwapChain(VkeDevice &deviceRef, VkExtent2D windowExtent);
-    VkeSwapChain(VkeDevice &deviceRef, VkExtent2D windowExtent, std::shared_ptr<VkeSwapChain> previous);
+    VkeSwapChain(VkeDevice &deviceRef, VkExtent2D windowExtent, VkExtent2D shadowExtent);
+    VkeSwapChain(VkeDevice &deviceRef, VkExtent2D windowExtent, VkExtent2D shadowExtent, std::shared_ptr<VkeSwapChain> previous);
     ~VkeSwapChain();
 
     VkeSwapChain(const VkeSwapChain &) = delete;
     VkeSwapChain operator=(const VkeSwapChain &) = delete;
 
     VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
-    VkFramebuffer getShadowMapFrameBuffer(int index) { return shadowMapFramebuffers[index]; }
+    VkFramebuffer getShadowMapFrameBuffer() { return shadowMapFramebuffer; }
     VkRenderPass getRenderPass() { return renderPass; }
     VkRenderPass getShadowRenderPass() { return shadowRenderPass; }
+    VkImageView getShadowDepthImageView() { return shadowDepthImageView; }
     VkImageView getImageView(int index) { return swapChainImageViews[index]; }
     size_t imageCount() { return swapChainImages.size(); }
     VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return swapChainExtent; }
+    VkExtent2D getShadowMapExtent() { return shadowMapExtent; }
     uint32_t width() { return swapChainExtent.width; }
     uint32_t height() { return swapChainExtent.height; }
 
@@ -54,6 +56,7 @@ namespace vke
     void init();
     void createSwapChain();
     void createImageViews();
+    void createShadowDepthImage();
     void createDepthResources();
     void createRenderPass();
     void createShadowMapRenderPass();
@@ -73,13 +76,15 @@ namespace vke
     VkExtent2D swapChainExtent;
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
-    std::vector<VkFramebuffer> shadowMapFramebuffers;
+    VkFramebuffer shadowMapFramebuffer;
     VkRenderPass renderPass;
     VkRenderPass shadowRenderPass;
 
     std::vector<VkImage> depthImages;
+    VkImage shadowImage;
     std::vector<VkDeviceMemory> depthImageMemorys;
     std::vector<VkImageView> depthImageViews;
+    VkDeviceMemory shadowImageMemory;
     VkImageView shadowDepthImageView;
     std::vector<VkImage> swapChainImages;
     std::vector<VkImageView> swapChainImageViews;
