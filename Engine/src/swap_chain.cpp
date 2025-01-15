@@ -451,6 +451,7 @@ namespace vke
 
     vkBindImageMemory(device.device(), shadowImage, shadowImageMemory, 0);
     VkImageViewCreateInfo depthStencilView{};
+    depthStencilView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
     depthStencilView.format = VK_FORMAT_D16_UNORM;
     depthStencilView.subresourceRange = {};
