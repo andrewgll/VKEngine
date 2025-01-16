@@ -37,7 +37,7 @@ namespace vke
     createShadowMapRenderPass();
     createShadowDepthImage();
     createShadowMapFramebuffers();
-    
+
     createSyncObjects();
   }
 
@@ -372,7 +372,6 @@ namespace vke
   {
     assert(shadowRenderPass != VK_NULL_HANDLE && "shadowRenderPass is invalid!");
     assert(shadowDepthImageView != VK_NULL_HANDLE && "shadowDepthImageView is invalid!");
-
 
     VkFramebufferCreateInfo framebufferInfo = {};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

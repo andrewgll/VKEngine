@@ -106,16 +106,16 @@ class VkeDevice {
   
   
   const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-  const std::vector<const char *>  deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME  // required for portability subset
-    // VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME, // questionable
-    // VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME, 
-    // VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME  
+  const std::vector<const char *> deviceExtensions = {
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      #ifdef __APPLE__
+      VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
+      #endif
+      // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME  // required for portability subset
+      // VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME, // questionable
+      // VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+      // VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME
   };
-  #ifdef __APPLE__
-  deviceExtensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
-  #endif
 };
 
 }  // namespace vke

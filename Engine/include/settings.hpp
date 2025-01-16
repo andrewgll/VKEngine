@@ -1,14 +1,13 @@
 #pragma once
 
-
 #if defined(_WIN32) || defined(_WIN64)
-    #define VKENGINE_ABSOLUTE_PATH \
-        (std::string(std::getenv("APPDATA")) + "\\VKEngine\\")
+#define VKENGINE_ABSOLUTE_PATH \
+    (std::string(std::getenv("APPDATA")) + "\\VKEngine\\")
 #elif defined(__APPLE__) || defined(__MACH__)
-    #define VKENGINE_ABSOLUTE_PATH \
-        (std::string(std::getenv("HOME")) + "/Library/Application Support/VKEngine/")
+#define VKENGINE_ABSOLUTE_PATH \
+    (std::string(std::getenv("HOME")) + "/Library/Application Support/VKEngine/")
 #else
-    #define VKENGINE_ABSOLUTE_PATH "Unsupported platform"
+#define VKENGINE_ABSOLUTE_PATH "Unsupported platform"
 #endif
 
 #define WIDTH 1920

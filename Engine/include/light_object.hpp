@@ -55,7 +55,7 @@ namespace vke
         glm::vec3 direction;
         glm::vec3 scale{1.f, 1.f, 1.f};
         glm::vec3 color;
-        
+
         float intensity;
 
         float nearPlane;

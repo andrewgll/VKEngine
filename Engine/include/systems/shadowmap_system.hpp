@@ -44,7 +44,7 @@ namespace vke
         VkPipelineLayout pipelineLayout;
 
         // Shadow map specific resources
-        VkRenderPass shadowRenderPass;      // Render pass for shadow map rendering
-        VkExtent2D shadowMapExtent;         // Resolution of the shadow map
+        VkRenderPass shadowRenderPass; // Render pass for shadow map rendering
+        VkExtent2D shadowMapExtent;    // Resolution of the shadow map
     };
 } // namespace vke

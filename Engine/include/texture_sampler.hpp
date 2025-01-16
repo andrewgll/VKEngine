@@ -17,6 +17,7 @@ namespace vke
         TextureSampler operator=(const TextureSampler &) = delete;
 
         VkSampler getSampler() { return textureSampler; }
+
     private:
         void createTextureSampler();
         VkeDevice &vkeDevice;

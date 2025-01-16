@@ -164,25 +164,25 @@ namespace vke
     {
 
         auto skullObject = objectManager
-                               .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/skull.obj")
-                               .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/skull.jpg")
+                               .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/skull.obj")
+                               .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/skull.jpg")
                                .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
         gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
         auto eyeObject = objectManager
-                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/eye.obj")
-                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/eye.jpg")
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
                              .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
         gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
         auto gunObject = objectManager
-                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/Gun.obj")
-                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/Gun.jpg")
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/Gun.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/Gun.jpg")
                              .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
         gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
-                        .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/quad.obj")
+                        .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/quad.obj")
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 

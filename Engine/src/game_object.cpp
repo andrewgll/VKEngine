@@ -62,7 +62,7 @@ namespace vke
             },
         };
     }
-    
+
     void VkeGameObject::initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer)
     {
         auto writer = VkeDescriptorWriter(layout, globalDescriptorPool);

@@ -80,7 +80,6 @@ namespace vke
         for (auto &lightObject : frameInfo.lightObjects)
         {
 
-
             assert(lightIndex < MAX_LIGHTS && "Exceeded max point lights");
 
             // update point light position

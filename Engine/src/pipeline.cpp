@@ -156,8 +156,8 @@ namespace vke
         configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
         configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
         configInfo.rasterizationInfo.depthBiasConstantFactor = depthBiasConstantFactor; // Optional
-        configInfo.rasterizationInfo.depthBiasClamp = 0.0f;          // Optional
-        configInfo.rasterizationInfo.depthBiasSlopeFactor = depthBiasSlopeFactor; // Optional
+        configInfo.rasterizationInfo.depthBiasClamp = 0.0f;                             // Optional
+        configInfo.rasterizationInfo.depthBiasSlopeFactor = depthBiasSlopeFactor;       // Optional
 
         configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
@@ -228,7 +228,7 @@ namespace vke
         configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
         configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-        
+
         configInfo.subpass = 0;
 
         configInfo.bindingDescriptions = VkeModel::Vertex::getBindingDescriptions();

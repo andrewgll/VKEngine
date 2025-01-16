@@ -1,38 +1,39 @@
 #pragma once
 
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <string>
 
-namespace vke {
-    class VkeWindow{
+namespace vke
+{
+    class VkeWindow
+    {
 
-        public:
-            VkeWindow(int w, int h, std::string name);
-            ~VkeWindow();
+    public:
+        VkeWindow(int w, int h, std::string name);
+        ~VkeWindow();
 
-            VkeWindow(const VkeWindow &) = delete;
-            VkeWindow &operator = (const VkeWindow &) = delete;
+        VkeWindow(const VkeWindow &) = delete;
+        VkeWindow &operator=(const VkeWindow &) = delete;
 
-            bool shouldClose() {return glfwWindowShouldClose(window);}
+        bool shouldClose() { return glfwWindowShouldClose(window); }
 
-            VkExtent2D getExtent() {return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
+        VkExtent2D getExtent() { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
 
-            void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
-            bool wasWindowResized() { return frameBufferResized; }
-            void resetWindowResizedFlag() { frameBufferResized = false;}
-            GLFWwindow *getGLWFWindow() const { return window; }
-        private:
-            static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
-            void initWindow();
+        void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
+        bool wasWindowResized() { return frameBufferResized; }
+        void resetWindowResizedFlag() { frameBufferResized = false; }
+        GLFWwindow *getGLWFWindow() const { return window; }
 
-            int width;
-            int height;
-            bool frameBufferResized = false;
+    private:
+        static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
+        void initWindow();
 
+        int width;
+        int height;
+        bool frameBufferResized = false;
 
-            std::string windowName;
-            GLFWwindow *window;
-
+        std::string windowName;
+        GLFWwindow *window;
     };
 } // namespace vke
