@@ -5,6 +5,8 @@
 
 #include "game_object.hpp"
 
+#include <vulkan/vulkan.h>
+
 namespace vke
 {
     class LightObject

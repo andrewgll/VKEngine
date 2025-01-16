@@ -2,6 +2,7 @@
 
 #include "device.hpp"
 #include "texture_sampler.hpp"
+#include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 namespace vke
 {

@@ -1,4 +1,5 @@
 #include "game_object.hpp"
+#include <stdexcept>
 
 #include "descriptors.hpp"
 

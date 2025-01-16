@@ -1,6 +1,8 @@
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include "window.hpp"
-
 #include <stdexcept>
+
 
 namespace vke{
     VkeWindow::VkeWindow(int w, int h, std::string name) : width{w}, height{h}, windowName{name} {

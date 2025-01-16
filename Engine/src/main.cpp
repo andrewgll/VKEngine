@@ -1,3 +1,4 @@
+#include "settings.hpp"
 #include "app.hpp"
 
 #include <cstdlib>

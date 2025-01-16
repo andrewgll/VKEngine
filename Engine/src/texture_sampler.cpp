@@ -2,6 +2,8 @@
 
 #include "device.hpp"
 
+#include <stdexcept>
+
 namespace vke
 {
     TextureSampler::TextureSampler(VkeDevice &device) : vkeDevice(device)

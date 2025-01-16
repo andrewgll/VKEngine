@@ -4,6 +4,7 @@
 #include "device.hpp"
 #include "swap_chain.hpp"
 
+#include <vulkan/vulkan.h>
 // std
 #include <cassert>
 #include <memory>

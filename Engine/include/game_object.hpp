@@ -7,6 +7,7 @@
 // libs
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <vulkan/vulkan.h>
 // std
 #include <memory>
 #include <unordered_map>

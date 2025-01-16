@@ -5,7 +5,7 @@
 #include "light_object.hpp"
 
 // libs
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 namespace vke
 {

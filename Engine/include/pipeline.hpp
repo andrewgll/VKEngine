@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "device.hpp"
+#include <vulkan/vulkan.h>
 
 namespace vke
 {

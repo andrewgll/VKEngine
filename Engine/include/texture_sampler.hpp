@@ -1,6 +1,7 @@
 #pragma once
 
 #include "device.hpp"
+#include <vulkan/vulkan.h>
 
 namespace vke
 {

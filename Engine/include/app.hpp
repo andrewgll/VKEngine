@@ -12,6 +12,8 @@
 #include <memory>
 #include <vector>
 
+#include <vulkan/vulkan.h>
+
 namespace vke
 {
     class App

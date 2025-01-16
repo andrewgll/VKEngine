@@ -81,13 +81,25 @@ void VkeDevice::createInstance() {
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion = VK_API_VERSION_1_0;
   
-  auto extensions = getRequiredExtensions();
-  extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME); // for macos
-  extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); // for macos
+auto extensions = getRequiredExtensions();
+
+  #if defined(_WIN32) || defined(_WIN64)
+      // Windows doesn't require the portability extensions
+      // You can remove the macOS specific extensions here.
+  #elif defined(__APPLE__) || defined(__MACH__)
+      // macOS requires portability extensions
+      extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME); 
+      extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME); 
+  #endif
   VkInstanceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
-  createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;  // for macos
+  
+  #if defined(_WIN32) || defined(_WIN64)
+      createInfo.flags = 0; 
+  #elif defined(__APPLE__) || defined(__MACH__)
+      createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;  // for macOS
+  #endif
   createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
   createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -300,24 +312,33 @@ void VkeDevice::hasGflwRequiredInstanceExtensions() {
 }
 
 bool VkeDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
-  uint32_t extensionCount;
-  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
-  std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-  vkEnumerateDeviceExtensionProperties(
-      device,
-      nullptr,
-      &extensionCount,
-      availableExtensions.data());
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(
+        device,
+        nullptr,
+        &extensionCount,
+        availableExtensions.data());
 
-  std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
-  for (const auto &extension : availableExtensions) {
-    requiredExtensions.erase(extension.extensionName);
-  }
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
 
-  return requiredExtensions.empty();
+    if (!requiredExtensions.empty()) {
+        std::cout << "Missing extensions: ";
+        for (const auto& extension : requiredExtensions) {
+            std::cout << extension << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    return requiredExtensions.empty();
 }
+
 
 QueueFamilyIndices VkeDevice::findQueueFamilies(VkPhysicalDevice device) {
   QueueFamilyIndices indices;
