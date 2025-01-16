@@ -8,8 +8,6 @@
 #include "object_manager.hpp"
 #include "light_object.hpp"
 
-#define SHADOWMAP_DIM 2048
-
 // std
 #include <memory>
 #include <vector>
@@ -19,9 +17,6 @@ namespace vke
     class App
     {
     public:
-        static constexpr int WIDTH = 1920;
-        static constexpr int HEIGHT = 1080;
-
         App();
         ~App();
 

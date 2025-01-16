@@ -7,8 +7,8 @@ COMPILER := clang++
 COMPILER_FLAGS := -std=c++17
 RELEASE_FLAGS := -O2 -DNDEBUG
 DEBUG_FLAGS := -g -O0
-INCLUDE_FLAGS := -IEngine/src -IEngine/include -I$(VULKAN_SDK)/include -I$(VULKAN_SDK)/lib -I/opt/homebrew/include -Ilibs
-LINKER_FLAGS := -lvulkan -lglfw -L/opt/homebrew/lib
+INCLUDE_FLAGS := -IEngine/src -IEngine/include -I$(VULKAN_SDK)/include -I/opt/homebrew/include -Ilibs
+LINKER_FLAGS := -lvulkan -lglfw -L/opt/homebrew/lib -Wl,-rpath,$(VULKAN_SDK)/lib -Wl,-rpath,/opt/homebrew/lib
 
 SRC_FILES := $(shell find $(ASSEMBLY) -type f -name "*.cpp")
 OBJ_FILES := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))

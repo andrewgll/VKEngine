@@ -10,9 +10,6 @@
 #include "light_object.hpp"
 #include "texture_sampler.hpp"
 
-#define MAX_FRAME_TIME 0.1f
-#define SHADOWMAP_DIM 2048
-
 // libs
 #define GLM_FORCE_RADIANT
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -167,32 +164,32 @@ namespace vke
     {
 
         auto skullObject = objectManager
-                               .addModel("models/skull.obj")
-                               .addTexture("textures/skull.jpg")
+                               .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/skull.obj")
+                               .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/skull.jpg")
                                .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
         gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
         auto eyeObject = objectManager
-                             .addModel("models/eye.obj")
-                             .addTexture("textures/eye.jpg")
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/eye.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/eye.jpg")
                              .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
         gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
         auto gunObject = objectManager
-                             .addModel("models/Gun.obj")
-                             .addTexture("textures/Gun.jpg")
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/Gun.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) +"textures/Gun.jpg")
                              .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
         gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
-                        .addModel("models/quad.obj")
+                        .addModel(std::string(VKENGINE_ABSOLUTE_PATH) +"models/quad.obj")
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
         // auto sword = objectManager
-        //                  .addModel("models/sword.obj")
-        //                  .addTexture("textures/sword_albedo.jpg")
-        //                  .addTexture("textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+        //                  .addModel("/Users/mra/Documents/VKEngine_v2/models/sword.obj")
+        //                  .addTexture("/Users/mra/Documents/VKEngine_v2/textures/sword_albedo.jpg")
+        //                  .addTexture("/Users/mra/Documents/VKEngine_v2/textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
         //                  .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
         //                  .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
         //                  .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)

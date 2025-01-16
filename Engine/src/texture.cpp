@@ -97,7 +97,7 @@ namespace vke
 
         if (!pixels)
         {
-            throw std::runtime_error("failed to load texture image!");
+            throw std::runtime_error("failed to load texture image! " + filename);
         }
 
         VkeBuffer stagingBuffer = VkeBuffer(

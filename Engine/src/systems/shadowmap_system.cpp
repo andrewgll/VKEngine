@@ -10,6 +10,7 @@
 // std
 #include <stdexcept>
 #include <array>
+#include <settings.hpp>
 
 namespace vke
 {
@@ -61,8 +62,8 @@ namespace vke
         pipelineConfig.pipelineLayout = pipelineLayout;
         vkePipeline = std::make_unique<VkePipeline>(
             vkeDevice,
-            "Engine/shaders/shadow.vert.spv",
-            "Engine/shaders/shadow.frag.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shadow.vert.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shadow.frag.spv",
             pipelineConfig);
     }
 

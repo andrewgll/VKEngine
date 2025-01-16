@@ -12,6 +12,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <map>
+#include <settings.hpp>
 
 namespace vke
 {
@@ -65,8 +66,8 @@ namespace vke
         pipelineConfig.pipelineLayout = pipelineLayout;
         vkePipeline = std::make_unique<VkePipeline>(
             vkeDevice,
-            "Engine/shaders/point_light.vert.spv",
-            "Engine/shaders/point_light.frag.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/point_light.vert.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/point_light.frag.spv",
             pipelineConfig);
     }
 
