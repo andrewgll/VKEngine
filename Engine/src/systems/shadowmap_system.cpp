@@ -35,7 +35,7 @@ namespace vke
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
+        pushConstantRange.size = sizeof(ShadowMapPushConstants);
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -67,19 +67,21 @@ namespace vke
             pipelineConfig);
     }
 
-    void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo)
+    void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo, DirectionalLight &dirLight)
     {
         vkePipeline->bind(frameInfo.commandBuffer);
-        for (auto &kv : frameInfo.gameObjects)
-        {
 
+        glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f), glm::vec3(dirLight.direction), glm::vec3(0.0f, 1.0f, 0.0f));
+        float nearPlane = 0.1f;
+        float farPlane = 100.0f;
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+        for (auto &kv : frameInfo.gameObjects){
             auto &obj = kv.second;
-            if (obj.pointLight == nullptr)
+            if (!obj.model)
                 continue;
             ShadowMapPushConstants push{};
             push.modelMatrix = obj.transform.mat4();
-            push.lightViewProj = obj.getViewProjectionMatrix();
-
+            push.lightViewProj = lightProjection * lightView;
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
@@ -87,8 +89,50 @@ namespace vke
                 0,
                 sizeof(ShadowMapPushConstants),
                 &push);
-
             obj.model->bind(frameInfo.commandBuffer);
+            obj.model->draw(frameInfo.commandBuffer);
         }
+        // for (auto &ki : frameInfo.gameObjects)
+        // {
+        //     auto &lightObj = ki.second;
+
+        //     if (!lightObj.pointLight)
+        //         continue;
+
+        //     glm::mat4 lightViewProj = lightObj.getViewProjectionMatrix();
+
+        //     vkCmdBindDescriptorSets(
+        //         frameInfo.commandBuffer,
+        //         VK_PIPELINE_BIND_POINT_GRAPHICS,
+        //         pipelineLayout,
+        //         0,
+        //         1,
+        //         &frameInfo.globalDescriptorSet,
+        //         0,
+        //         nullptr);
+
+            // for (auto &kv : frameInfo.gameObjects)
+            // {
+            //     auto &obj = kv.second;
+
+            //     if (!obj.model)
+            //         continue;
+
+            //     ShadowMapPushConstants push{};
+            //     push.modelMatrix = obj.transform.mat4();
+            //     push.lightViewProj = lightViewProj;
+
+            //     vkCmdPushConstants(
+            //         frameInfo.commandBuffer,
+            //         pipelineLayout,
+            //         VK_SHADER_STAGE_VERTEX_BIT,
+            //         0,
+            //         sizeof(ShadowMapPushConstants),
+            //         &push);
+
+            //     obj.model->bind(frameInfo.commandBuffer);
+            //     obj.model->draw(frameInfo.commandBuffer);
+            // }
+        // }
     }
 }

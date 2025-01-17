@@ -71,6 +71,26 @@ namespace vke
         gameObj.pointLight->lightIntensity = intensity;
         return gameObj;
     }
+    VkeGameObject::VkeGameObject(const VkeGameObject &other)
+        : id{createGameObject().id},
+          model{other.model},
+          material{other.material},
+          color{other.color},
+          transform{other.transform},
+          descriptorSet{other.descriptorSet},
+          isOrthographic{other.isOrthographic},
+          orthographicSize{other.orthographicSize},
+          fieldOfView{other.fieldOfView},
+          aspectRatio{other.aspectRatio},
+          intensity{other.intensity},
+          nearPlane{other.nearPlane},
+          farPlane{other.farPlane}
+    {
+        if (other.pointLight)
+        {
+            pointLight = std::make_unique<PointLightComponent>(*other.pointLight);
+        }
+    }
     glm::mat4 VkeGameObject::getViewProjectionMatrix()
     {
         glm::vec3 up = glm::abs(transform.rotation.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);

@@ -60,8 +60,8 @@ namespace vke
         }
 
         static VkeGameObject makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+        VkeGameObject(const VkeGameObject &);
 
-        VkeGameObject(const VkeGameObject &) = delete;
         VkeGameObject &operator=(const VkeGameObject &) = delete;
         VkeGameObject(VkeGameObject &&) = default;
         VkeGameObject &operator=(VkeGameObject &&) = default;

@@ -29,9 +29,9 @@ namespace vke
         loadGameObjects();
         loadLights();
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
-                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size()) // Increase if needed
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * objectManager.getTextureCount())
+                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2)         // Increase if needed
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2) // Increase if needed
                          .build();
     }
     App::~App()
@@ -139,14 +139,14 @@ namespace vke
                 ubo.inverseView = camera.getInverseView();
                 ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f));
                 ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
-                ubo.dirLight.intensity = 0.0f;
+                ubo.dirLight.intensity = 1.0f;
 
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 vkeRenderer.beginShadowSwapChainRenderPass(commandBuffer);
-                shadowMapSystem.renderShadowMaps(frameInfo);
+                shadowMapSystem.renderShadowMaps(frameInfo, ubo.dirLight);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
 
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
@@ -185,17 +185,20 @@ namespace vke
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        // auto sword = objectManager
-        //                  .addModel("/Users/mra/Documents/VKEngine_v2/models/sword.obj")
-        //                  .addTexture("/Users/mra/Documents/VKEngine_v2/textures/sword_albedo.jpg")
-        //                  .addTexture("/Users/mra/Documents/VKEngine_v2/textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-        //                  .addTexture("textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-        //                  .addTexture("textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-        //                  .addTexture("textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-        //                  .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        // gameObjects.emplace(sword.getId(), std::move(sword));
-        // float yPos = 4.f;
-
+        auto sword = objectManager
+                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/sword.obj")
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_albedo.jpg")
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        for (int i = 0; i < 5; i++)
+        {
+            auto swordCopy = sword;
+            swordCopy.transform.translation = {4*i, 0, 0.f};
+            gameObjects.emplace(swordCopy.getId(), std::move(swordCopy));
+        }
         auto phone4 = objectManager
                           .addModel("models/phone.obj")
                           .addTexture("textures/T_Telephone_Color.tga.png")
@@ -209,12 +212,12 @@ namespace vke
     void App::loadLights()
     {
         std::vector<glm::vec3> lightColors{
-            {1.f, .1f, .1f},
-            {.1f, .1f, 1.f},
-            {.1f, 1.f, .1f},
-            {1.f, 1.f, .1f},
-            {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f} //
+            // {1.f, .1f, .1f},
+            // {.1f, .1f, 1.f},
+            // {.1f, 1.f, .1f},
+            // {1.f, 1.f, .1f},
+            // {.1f, 1.f, 1.f},
+            // {1.f, 1.f, 1.f} //
         };
 
         for (int i = 0; i < lightColors.size(); i++)

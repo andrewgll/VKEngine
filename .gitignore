@@ -1,3 +1,4 @@
 bin/*
 *.spv
 libs/*
+.DS_Store

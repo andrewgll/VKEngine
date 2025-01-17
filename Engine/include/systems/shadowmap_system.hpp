@@ -32,7 +32,7 @@ namespace vke
         ShadowMapSystem(const ShadowMapSystem &) = delete;
         ShadowMapSystem &operator=(const ShadowMapSystem &) = delete;
 
-        void renderShadowMaps(FrameInfo &frameInfo);
+        void renderShadowMaps(FrameInfo &frameInfo, DirectionalLight &dirLight);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout &setLayout);
