@@ -109,6 +109,8 @@ float calculateShadow(vec4 fragPosLightSpace) {
 }
 
 void main() {
+    
+
     vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); // sRGB to linear
     float metallic = texture(metallicTexture, fragUv).r;
     float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); // Avoid zero roughness
@@ -150,6 +152,17 @@ void main() {
      // Calculate Directional LightObject Contribution
     vec3 L_dir = normalize(-ubo.dirLight.direction); // LightObject direction (towards light)
     float shadow = calculateShadow(ubo.lightViewProj * vec4(fragPosWorld, 1.0)); 
+    
+    vec4 fragPosLightSpace = ubo.lightViewProj * vec4(fragPosWorld, 1.0);
+
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.xy = clamp(projCoords.xy, 0.0, 1.0);
+    
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
+
+
     shadow = 1.0 - shadow;
     vec3 H_dir = normalize(V + L_dir);
     vec3 radiance_dir = ubo.dirLight.color * ubo.dirLight.intensity;
@@ -178,7 +191,6 @@ void main() {
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-    outColor = vec4(color, 1.0);
-    // outColor = vec4(shadow,1.0,1.0, 1.0);
 
+    outColor = vec4(color, 1.0);
 }

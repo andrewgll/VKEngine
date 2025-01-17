@@ -62,7 +62,35 @@ namespace vke
             },
         };
     }
+    VkeGameObject VkeGameObject::makePointLight(float intensity, float radius, glm::vec3 color)
+    {
+        VkeGameObject gameObj = VkeGameObject::createGameObject();
+        gameObj.color = color;
+        gameObj.transform.scale.x = radius;
+        gameObj.pointLight = std::make_unique<PointLightComponent>();
+        gameObj.pointLight->lightIntensity = intensity;
+        return gameObj;
+    }
+    glm::mat4 VkeGameObject::getViewProjectionMatrix()
+    {
+        glm::vec3 up = glm::abs(transform.rotation.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::mat4 lightView = glm::lookAt(transform.translation, transform.translation + transform.rotation, up);
 
+        glm::mat4 lightProjection;
+
+        if (isOrthographic)
+        {
+            float orthoSize = 10.0f;
+            lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+        }
+        else
+        {
+            lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+            lightProjection[1][1] *= -1;
+        }
+
+        return lightProjection * lightView;
+    }
     void VkeGameObject::initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer)
     {
         auto writer = VkeDescriptorWriter(layout, globalDescriptorPool);

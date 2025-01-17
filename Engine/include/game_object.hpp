@@ -42,6 +42,11 @@ namespace vke
         glm::mat3 normalMatrix();
     };
 
+    struct PointLightComponent
+    {
+        float lightIntensity{1.f};
+    };
+
     class VkeGameObject
     {
     public:
@@ -54,13 +59,14 @@ namespace vke
             return VkeGameObject{currentId++};
         }
 
+        static VkeGameObject makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+
         VkeGameObject(const VkeGameObject &) = delete;
         VkeGameObject &operator=(const VkeGameObject &) = delete;
         VkeGameObject(VkeGameObject &&) = default;
         VkeGameObject &operator=(VkeGameObject &&) = default;
-
         void initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer);
-
+        glm::mat4 getViewProjectionMatrix();
         const id_t getId()
         {
             return id;
@@ -71,8 +77,18 @@ namespace vke
         glm::vec3 color{};
         TransformComponent transform{};
         VkDescriptorSet descriptorSet{};
+        std::unique_ptr<PointLightComponent>
+            pointLight = nullptr;
 
     private:
+        bool isOrthographic = true;
+        float orthographicSize = 10.0f;
+        float fieldOfView = 45.0f;
+        float aspectRatio = 1.0f;
+        float intensity;
+
+        float nearPlane;
+        float farPlane;
         VkeGameObject(id_t objId) : id{objId} {}
 
         id_t id;

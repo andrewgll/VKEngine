@@ -69,30 +69,26 @@ namespace vke
 
     void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo)
     {
-        for (auto &light : frameInfo.lightObjects)
+        vkePipeline->bind(frameInfo.commandBuffer);
+        for (auto &kv : frameInfo.gameObjects)
         {
-            vkePipeline->bind(frameInfo.commandBuffer);
 
-            for (auto &kv : frameInfo.gameObjects)
-            {
-                auto &obj = kv.second;
-                if (!obj.model)
-                    continue;
+            auto &obj = kv.second;
+            if (obj.pointLight == nullptr)
+                continue;
+            ShadowMapPushConstants push{};
+            push.modelMatrix = obj.transform.mat4();
+            push.lightViewProj = obj.getViewProjectionMatrix();
 
-                ShadowMapPushConstants push{};
-                push.modelMatrix = obj.transform.mat4();
-                push.lightViewProj = light.getViewProjectionMatrix();
+            vkCmdPushConstants(
+                frameInfo.commandBuffer,
+                pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT,
+                0,
+                sizeof(ShadowMapPushConstants),
+                &push);
 
-                vkCmdPushConstants(
-                    frameInfo.commandBuffer,
-                    pipelineLayout,
-                    VK_SHADER_STAGE_VERTEX_BIT,
-                    0,
-                    sizeof(ShadowMapPushConstants),
-                    &push);
-
-                obj.model->bind(frameInfo.commandBuffer);
-            }
+            obj.model->bind(frameInfo.commandBuffer);
         }
     }
 }

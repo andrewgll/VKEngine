@@ -77,18 +77,6 @@ namespace vke
       vkDestroyFence(device.device(), inFlightFences[i], nullptr);
     }
 
-    // if (shadowDepthImageView != VK_NULL_HANDLE)
-    // {
-    //   vkDestroyImageView(device.device(), shadowDepthImageView, nullptr);
-    // }
-    // if (shadowImage != VK_NULL_HANDLE)
-    // {
-    //   vkDestroyImage(device.device(), shadowImage, nullptr);
-    // }
-    // if (shadowImageMemory != VK_NULL_HANDLE)
-    // {
-    //   vkFreeMemory(device.device(), shadowImageMemory, nullptr);
-    // }
   }
 
   VkResult VkeSwapChain::acquireNextImage(uint32_t *imageIndex)
@@ -255,7 +243,7 @@ namespace vke
   void VkeSwapChain::createShadowMapRenderPass()
   {
     VkAttachmentDescription attachmentDescription{};
-    attachmentDescription.format = VK_FORMAT_D16_UNORM;
+    attachmentDescription.format = VK_FORMAT_D32_SFLOAT;
     attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
     attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;

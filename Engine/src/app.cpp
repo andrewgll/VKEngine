@@ -30,7 +30,7 @@ namespace vke
         loadLights();
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
                          .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size())
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * lights.size()) // Increase if needed
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size()) // Increase if needed
                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * objectManager.getTextureCount())
                          .build();
     }
@@ -131,7 +131,7 @@ namespace vke
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
                 float currentTimeInSeconds = std::chrono::duration<float, std::chrono::seconds::period>(currentTime.time_since_epoch()).count();
-                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects, lights};
+                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
                 // update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
@@ -144,7 +144,7 @@ namespace vke
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
-                // render   
+
                 vkeRenderer.beginShadowSwapChainRenderPass(commandBuffer);
                 shadowMapSystem.renderShadowMaps(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
@@ -196,45 +196,34 @@ namespace vke
         // gameObjects.emplace(sword.getId(), std::move(sword));
         // float yPos = 4.f;
 
-        // auto phone4 = objectManager
-        //                   .addModel("models/phone.obj")
-        //                   .addTexture("textures/T_Telephone_Color.tga.png")
-        //                   .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-        //                   .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
-        //                   .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-        //                   .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-        //                   .build({0.f, 1.f, yPos - 6}, {10.f, 10.f, 10.f});
-        // gameObjects.emplace(phone4.getId(), std::move(phone4));
+        auto phone4 = objectManager
+                          .addModel("models/phone.obj")
+                          .addTexture("textures/T_Telephone_Color.tga.png")
+                          .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                          .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+                          .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                          .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                          .build({0.f, 1.f,  -6}, {10.f, 10.f, 10.f});
+        gameObjects.emplace(phone4.getId(), std::move(phone4));
     }
     void App::loadLights()
     {
         std::vector<glm::vec3> lightColors{
-            // {1.f, .1f, .1f},
-            // {.1f, .1f, 1.f},
-            // {.1f, 1.f, .1f},
-            // {1.f, 1.f, .1f},
-            // {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f}
-            };
+            {1.f, .1f, .1f},
+            {.1f, .1f, 1.f},
+            {.1f, 1.f, .1f},
+            {1.f, 1.f, .1f},
+            {.1f, 1.f, 1.f},
+            {1.f, 1.f, 1.f} //
+        };
 
         for (int i = 0; i < lightColors.size(); i++)
         {
-            glm::mat4 rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
-            glm::vec3 lightPosition = glm::vec3{rotate * glm::vec4(0.f, 10.f, 0.f, 1.f)};
-
-            glm::vec3 lightDirection = glm::normalize(glm::vec3(0.f, -1.f, 0.f) - lightPosition);
-
-            vke::LightObject lightObject(
-                lightPosition,  // LightObject position
-                lightDirection, // LightObject direction
-                lightColors[i], // LightObject color
-                1.0f,           // Intensity
-                0.1f,           // Near plane
-                50.f            // Far plane
-            );
-
-            lightObject.setOrthographic(true, 20.0f);
-            lights.push_back(std::move(lightObject));
+            auto pointLight = VkeGameObject::makePointLight(0.3f);
+            pointLight.color = lightColors[i];
+            auto rotate = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
+            pointLight.transform.translation = glm::vec3{rotate * glm::vec4(-1.f, -1.f, -1.f, 1.f)};
+            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }
     }
 }

@@ -40,6 +40,5 @@ namespace vke
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
         VkeGameObject::Map gameObjects;
-        std::vector<LightObject> lights;
     };
 } // namespace vke

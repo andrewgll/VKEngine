@@ -44,6 +44,5 @@ namespace vke
         VkeCamera &camera;
         VkDescriptorSet globalDescriptorSet;
         VkeGameObject::Map &gameObjects;
-        std::vector<LightObject> lightObjects;
     };
 } // namespace vke
