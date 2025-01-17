@@ -218,8 +218,8 @@ namespace vke
         configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT; // Ensure proper face culling
         configInfo.rasterizationInfo.depthBiasEnable = VK_TRUE;        // Enable depth bias
         configInfo.rasterizationInfo.depthBiasConstantFactor = 1.25f;  // Fine-tune for shadows
-        configInfo.rasterizationInfo.depthBiasClamp = 0.0f;
         configInfo.rasterizationInfo.depthBiasSlopeFactor = 1.75f;
+        configInfo.rasterizationInfo.depthBiasClamp = 0.0f;
 
         configInfo.colorBlendAttachment.colorWriteMask = 0; // Disable color writes
         configInfo.colorBlendAttachment.blendEnable = VK_FALSE;

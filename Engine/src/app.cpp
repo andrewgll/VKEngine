@@ -139,18 +139,17 @@ namespace vke
                 ubo.inverseView = camera.getInverseView();
                 ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f));
                 ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
-                ubo.dirLight.intensity = 1.0f;
+                ubo.dirLight.intensity = 0.0f;
 
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
-                // render
+                // render   
                 vkeRenderer.beginShadowSwapChainRenderPass(commandBuffer);
                 shadowMapSystem.renderShadowMaps(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
 
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
@@ -215,7 +214,8 @@ namespace vke
             // {.1f, 1.f, .1f},
             // {1.f, 1.f, .1f},
             // {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f}};
+            {1.f, 1.f, 1.f}
+            };
 
         for (int i = 0; i < lightColors.size(); i++)
         {

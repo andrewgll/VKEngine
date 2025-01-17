@@ -18,17 +18,15 @@ namespace vke
 
         glm::mat4 getViewProjectionMatrix()
         {
-            glm::mat4 lightView = glm::lookAt(
-                position,
-                position + direction,
-                up);
+            glm::vec3 up = glm::abs(direction.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+            glm::mat4 lightView = glm::lookAt(position, position + direction, up);
 
             glm::mat4 lightProjection;
 
             if (isOrthographic)
             {
                 float orthoSize = 10.0f;
-                lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+                lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
             }
             else
             {

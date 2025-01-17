@@ -91,9 +91,8 @@ float calculateShadow(vec4 fragPosLightSpace) {
     
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 
-    
     projCoords = projCoords * 0.5 + 0.5;
-
+    projCoords.xy = clamp(projCoords.xy, 0.0, 1.0);
     
     if (projCoords.z > 1.0) return 0.0;
 
@@ -102,7 +101,8 @@ float calculateShadow(vec4 fragPosLightSpace) {
     float currentDepth = projCoords.z;
 
     
-    float bias = max(0.05 * (1.0 - dot(fragNormalWorld, ubo.dirLight.direction)), 0.005);
+    float bias = max(0.025 * (1.0 - dot(fragNormalWorld, ubo.dirLight.direction)), 0.0005);
+
     float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
@@ -114,7 +114,7 @@ void main() {
     float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); // Avoid zero roughness
     float ao = texture(aoTexture, fragUv).r;
 
-    vec3 N = getNormal();
+    vec3 N = normalize(getNormal());
     vec3 V = normalize(ubo.invView[3].xyz - fragPosWorld);
 
     vec3 F0 = vec3(0.04); // Default dielectric reflectance
@@ -167,16 +167,18 @@ void main() {
     kD_dir *= 1.0 - metallic;
 
     float NdotL_dir = max(dot(N, L_dir), 0.0);
-    // Lo += shadow*(kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
-    Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    Lo += shadow*(kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    // Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
     // Ambient Lighting
     vec3 ambient = (ubo.ambientLightColor.rgb * ubo.ambientLightColor.a) * albedo * ao;
-    vec3 color = ambient * ao + Lo; 
+    vec3 color = ambient + Lo; 
 
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
+    outColor = vec4(color, 1.0);
+    // outColor = vec4(shadow,1.0,1.0, 1.0);
 
 }

@@ -150,7 +150,7 @@ namespace vke
     void VkeRenderer::beginShadowSwapChainRenderPass(VkCommandBuffer commandBuffer)
     {
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].depthStencil = {1.0f, 0};
+        clearValues[1].depthStencil = {1.0f, 0};
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

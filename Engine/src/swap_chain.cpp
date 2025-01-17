@@ -420,16 +420,15 @@ namespace vke
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width = shadowMapExtent.width;
-    imageInfo.extent.height = shadowMapExtent.height;
-    imageInfo.extent.depth = 1;
+    imageInfo.extent = {shadowMapExtent.width, shadowMapExtent.height, 1};
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.format = VK_FORMAT_D16_UNORM; // Depth format
+    imageInfo.format = VK_FORMAT_D32_SFLOAT;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // Ensure initial layout is set.
     imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    // imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // Explicitly set sharing mode.
 
     if (vkCreateImage(device.device(), &imageInfo, nullptr, &shadowImage) != VK_SUCCESS)
     {
@@ -452,7 +451,7 @@ namespace vke
     VkImageViewCreateInfo depthStencilView{};
     depthStencilView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    depthStencilView.format = VK_FORMAT_D16_UNORM;
+    depthStencilView.format = VK_FORMAT_D32_SFLOAT;
     depthStencilView.subresourceRange = {};
     depthStencilView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     depthStencilView.subresourceRange.baseMipLevel = 0;

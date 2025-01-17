@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <map>
 #include <settings.hpp>
+#include <iostream>
 
 namespace vke
 {
@@ -83,7 +84,7 @@ namespace vke
             assert(lightIndex < MAX_LIGHTS && "Exceeded max point lights");
 
             // update point light position
-            lightObject.position = glm::vec3(rotate * glm::vec4(lightObject.position, 1.f));
+            // lightObject.position = glm::vec3(rotate * glm::vec4(lightObject.position, 1.f));
 
             // copy light to ubo
             ubo.pointLights[lightIndex].position = glm::vec4(lightObject.position, 1.f);
