@@ -13,13 +13,11 @@ namespace vke
 {
     struct SimplePushConstantData
     {
-        glm::mat4 modelMatrix{1.f};
-        glm::mat4 normalMatrix{1.f};
-        bool hasNormalMap{false};
-        // float time{0.f};
-
-        // padding to 16 bytes
-        int padding[3] = {0, 0, 0};
+        glm::mat4 modelMatrix{1.f};   
+        glm::mat4 normalMatrix{1.f};  
+        bool hasNormalMap{false};     
+        int padding[3] = {0, 0, 0};   
+        glm::mat4 lightViewProj{1.f}; 
     };
     class RenderSystem
     {
@@ -29,7 +27,7 @@ namespace vke
 
         RenderSystem(const RenderSystem &) = delete;
         RenderSystem &operator=(const RenderSystem &) = delete;
-        void renderGameObjects(FrameInfo &frameInfo);
+        void renderGameObjects(FrameInfo &frameInfo, DirectionalLight &dirLight);
 
     private:
         void createPipelineLayout(std::vector<VkDescriptorSetLayout> &setLayouts);

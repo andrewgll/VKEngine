@@ -137,8 +137,9 @@ namespace vke
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 1.0f, -2.0f));
-                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
+                ubo.dirLight.direction = glm::normalize(glm::vec3(10.0f, -1.0f, -0.5f));
+                ubo.dirLight.color = glm::vec3(1.0f, 0.6f, 0.3f); // Warm orange-red sunset tone
+
                 ubo.dirLight.intensity = 1.0f;
 
                 pointLightSystem.update(frameInfo, ubo);
@@ -150,7 +151,7 @@ namespace vke
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
 
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(frameInfo);
+                renderSystem.renderGameObjects(frameInfo, ubo.dirLight);
                 pointLightSystem.render(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();

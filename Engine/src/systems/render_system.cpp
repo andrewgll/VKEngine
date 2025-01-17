@@ -58,8 +58,22 @@ namespace vke
             pipelineConfig);
     }
 
-    void RenderSystem::renderGameObjects(FrameInfo &frameInfo)
+    void RenderSystem::renderGameObjects(FrameInfo &frameInfo, DirectionalLight &dirLight)
     {
+        glm::vec3 lightPos = -dirLight.direction * 20.0f;
+        glm::mat4 lightView = glm::lookAt(
+            lightPos,
+            glm::vec3(0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f));
+        float nearPlane = 0.1f;
+        float farPlane = 100.0f;
+        float lightFrustumSize = 20.0f;
+        glm::mat4 lightProjection = glm::ortho(
+            -lightFrustumSize, lightFrustumSize,
+            -lightFrustumSize, lightFrustumSize,
+            nearPlane, farPlane);
+
+        glm::mat4 lightViewProj = lightProjection * lightView;
         // render
         vkePipeline->bind(frameInfo.commandBuffer);
 
@@ -85,7 +99,7 @@ namespace vke
             push.normalMatrix = obj.transform.normalMatrix();
             // push.time = frameInfo.frameTime;
             push.hasNormalMap = obj.material->flags.hasNormal;
-
+            push.lightViewProj = lightViewProj;
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,

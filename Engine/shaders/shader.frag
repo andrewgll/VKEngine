@@ -87,23 +87,25 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-// Shadow Mapping
 float shadowCalculation(vec4 fragPosLightSpace) {
-    // Transform fragment position to light space and compare depth
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5; // Convert from [-1, 1] to [0, 1] space
-    float closestDepth = texture(shadowMap, projCoords.xy).r; // Sample depth from shadow map
+    projCoords = projCoords * 0.5 + 0.5; 
+
+    projCoords.xy = clamp(projCoords.xy, 0.0, 1.0);
+
+    float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    // Shadow bias to reduce shadow acne
-    float bias = 0.005;
-    return currentDepth > closestDepth + bias ? 0.0 : 1.0; // If in shadow, return 0.0
+    float bias = max(0.005 * (1.0 - dot(fragNormalWorld, -ubo.dirLight.direction)), 0.0005);
+
+    return currentDepth > closestDepth + bias ? 0.0 : 1.0;
 }
 
+
 void main() {
-    vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); // sRGB to linear
+    vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); 
     float metallic = texture(metallicTexture, fragUv).r;
-    float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); // Avoid zero roughness
+    float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); 
     float ao = texture(aoTexture, fragUv).r;
 
     vec3 N = getNormal();
@@ -174,5 +176,5 @@ void main() {
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 
-    outColor = vec4(shadow,1.0,1.0,  1.0);
+    outColor = vec4( color, 1.0);
 }

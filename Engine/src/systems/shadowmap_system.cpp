@@ -71,11 +71,24 @@ namespace vke
     {
         vkePipeline->bind(frameInfo.commandBuffer);
 
-        glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f), glm::vec3(dirLight.direction), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 lightPos = -dirLight.direction * 20.0f; 
+        glm::mat4 lightView = glm::lookAt(
+            lightPos,
+            glm::vec3(0.0f),            
+            glm::vec3(0.0f, 1.0f, 0.0f) 
+        );
         float nearPlane = 0.1f;
         float farPlane = 100.0f;
-        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-        for (auto &kv : frameInfo.gameObjects){
+        float lightFrustumSize = 20.0f;
+        glm::mat4 lightProjection = glm::ortho(
+            -lightFrustumSize, lightFrustumSize,
+            -lightFrustumSize, lightFrustumSize,
+            nearPlane, farPlane);
+
+        glm::mat4 lightViewProj = lightProjection * lightView;
+
+        for (auto &kv : frameInfo.gameObjects)
+        {
             auto &obj = kv.second;
             if (!obj.model)
                 continue;
@@ -111,28 +124,28 @@ namespace vke
         //         0,
         //         nullptr);
 
-            // for (auto &kv : frameInfo.gameObjects)
-            // {
-            //     auto &obj = kv.second;
+        // for (auto &kv : frameInfo.gameObjects)
+        // {
+        //     auto &obj = kv.second;
 
-            //     if (!obj.model)
-            //         continue;
+        //     if (!obj.model)
+        //         continue;
 
-            //     ShadowMapPushConstants push{};
-            //     push.modelMatrix = obj.transform.mat4();
-            //     push.lightViewProj = lightViewProj;
+        //     ShadowMapPushConstants push{};
+        //     push.modelMatrix = obj.transform.mat4();
+        //     push.lightViewProj = lightViewProj;
 
-            //     vkCmdPushConstants(
-            //         frameInfo.commandBuffer,
-            //         pipelineLayout,
-            //         VK_SHADER_STAGE_VERTEX_BIT,
-            //         0,
-            //         sizeof(ShadowMapPushConstants),
-            //         &push);
+        //     vkCmdPushConstants(
+        //         frameInfo.commandBuffer,
+        //         pipelineLayout,
+        //         VK_SHADER_STAGE_VERTEX_BIT,
+        //         0,
+        //         sizeof(ShadowMapPushConstants),
+        //         &push);
 
-            //     obj.model->bind(frameInfo.commandBuffer);
-            //     obj.model->draw(frameInfo.commandBuffer);
-            // }
+        //     obj.model->bind(frameInfo.commandBuffer);
+        //     obj.model->draw(frameInfo.commandBuffer);
+        // }
         // }
     }
 }

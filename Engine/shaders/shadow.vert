@@ -11,6 +11,6 @@ layout(push_constant) uniform PushConstants {
 } pc;
 
 void main() {
-    // Transform the vertex position into light's view-projection space
+
     gl_Position = pc.lightViewProj * pc.modelMatrix * vec4(inPosition, 1.0);
 }
