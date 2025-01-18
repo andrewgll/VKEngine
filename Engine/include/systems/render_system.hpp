@@ -16,8 +16,8 @@ namespace vke
         glm::mat4 modelMatrix{1.f};   
         glm::mat4 normalMatrix{1.f};  
         bool hasNormalMap{false};     
-        int padding[3] = {0, 0, 0};   
         glm::mat4 lightViewProj{1.f}; 
+        int padding[3] = {0, 0, 0};   
     };
     class RenderSystem
     {

@@ -29,12 +29,13 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     int numLights;
 } ubo;
 
-layout(push_constant) uniform Push { 
-    mat4 modelMatrix; // projectiuon * view * model
+layout(push_constant) uniform Push {
+    mat4 modelMatrix;
     mat4 normalMatrix;
-    bool hasNormalMap; 
-    // float time; 
+    bool hasNormalMap;
+    mat4 lightViewProj;
 } push;
+
 
 void main() {
     vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);

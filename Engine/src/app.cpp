@@ -137,9 +137,9 @@ namespace vke
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                ubo.dirLight.direction = glm::normalize(glm::vec3(10.0f, -1.0f, -0.5f));
-                ubo.dirLight.color = glm::vec3(1.0f, 0.6f, 0.3f); // Warm orange-red sunset tone
-
+                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 10.0f, -20.0f));
+                ubo.dirLight.rotation = glm::vec3(0.0f, 0.0f, -1.0f);
+                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
                 ubo.dirLight.intensity = 1.0f;
 
                 pointLightSystem.update(frameInfo, ubo);

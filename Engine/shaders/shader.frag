@@ -41,7 +41,7 @@ layout(push_constant) uniform Push {
     mat4 modelMatrix;
     mat4 normalMatrix;
     bool hasNormalMap;
-    mat4 lightViewProj; // Light's view-projection matrix (for shadow mapping)
+    mat4 lightViewProj;
 } push;
 
 vec3 getNormal() {
@@ -96,9 +96,10 @@ float shadowCalculation(vec4 fragPosLightSpace) {
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
 
-    float bias = max(0.005 * (1.0 - dot(fragNormalWorld, -ubo.dirLight.direction)), 0.0005);
+    // float bias = max(0.005 * (1.0 - dot(fragNormalWorld, -ubo.dirLight.direction)), 0.0005);
 
-    return currentDepth > closestDepth + bias ? 0.0 : 1.0;
+    // return currentDepth > closestDepth + bias ? 0.0 : 1.0;
+    return currentDepth > closestDepth ? 0.0 : 1.0;
 }
 
 
@@ -176,5 +177,5 @@ void main() {
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 
-    outColor = vec4( color, 1.0);
+    outColor = vec4(shadow);
 }

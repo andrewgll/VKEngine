@@ -69,23 +69,22 @@ namespace vke
 
     void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo, DirectionalLight &dirLight)
     {
-        vkePipeline->bind(frameInfo.commandBuffer);
-
-        glm::vec3 lightPos = -dirLight.direction * 20.0f; 
-        glm::mat4 lightView = glm::lookAt(
-            lightPos,
-            glm::vec3(0.0f),            
-            glm::vec3(0.0f, 1.0f, 0.0f) 
-        );
         float nearPlane = 0.1f;
         float farPlane = 100.0f;
-        float lightFrustumSize = 20.0f;
-        glm::mat4 lightProjection = glm::ortho(
-            -lightFrustumSize, lightFrustumSize,
-            -lightFrustumSize, lightFrustumSize,
-            nearPlane, farPlane);
+        float lightSize = 50.0f; 
 
+        
+        glm::vec3 lightPosition = dirLight.direction * -1.0f; 
+        glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        
+        glm::mat4 lightProjection = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, nearPlane, farPlane);
+
+        
         glm::mat4 lightViewProj = lightProjection * lightView;
+
+
+        vkePipeline->bind(frameInfo.commandBuffer);
 
         for (auto &kv : frameInfo.gameObjects)
         {
@@ -105,47 +104,5 @@ namespace vke
             obj.model->bind(frameInfo.commandBuffer);
             obj.model->draw(frameInfo.commandBuffer);
         }
-        // for (auto &ki : frameInfo.gameObjects)
-        // {
-        //     auto &lightObj = ki.second;
-
-        //     if (!lightObj.pointLight)
-        //         continue;
-
-        //     glm::mat4 lightViewProj = lightObj.getViewProjectionMatrix();
-
-        //     vkCmdBindDescriptorSets(
-        //         frameInfo.commandBuffer,
-        //         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        //         pipelineLayout,
-        //         0,
-        //         1,
-        //         &frameInfo.globalDescriptorSet,
-        //         0,
-        //         nullptr);
-
-        // for (auto &kv : frameInfo.gameObjects)
-        // {
-        //     auto &obj = kv.second;
-
-        //     if (!obj.model)
-        //         continue;
-
-        //     ShadowMapPushConstants push{};
-        //     push.modelMatrix = obj.transform.mat4();
-        //     push.lightViewProj = lightViewProj;
-
-        //     vkCmdPushConstants(
-        //         frameInfo.commandBuffer,
-        //         pipelineLayout,
-        //         VK_SHADER_STAGE_VERTEX_BIT,
-        //         0,
-        //         sizeof(ShadowMapPushConstants),
-        //         &push);
-
-        //     obj.model->bind(frameInfo.commandBuffer);
-        //     obj.model->draw(frameInfo.commandBuffer);
-        // }
-        // }
-    }
+        }
 }
