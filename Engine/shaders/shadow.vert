@@ -6,10 +6,11 @@ layout(location = 2) in vec3 attr2;
 layout(location = 3) in vec3 attr3;
 
 layout(push_constant) uniform Push {
+    mat4 modelMatrix;   
     mat4 lightViewProj;       
 } push;
 
 void main() {
 
-    gl_Position = push.lightViewProj  * vec4(inPosition, 1.0);
+    gl_Position = push.lightViewProj * push.modelMatrix * vec4(inPosition, 1.0);
 }

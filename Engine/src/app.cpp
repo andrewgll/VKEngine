@@ -166,52 +166,52 @@ namespace vke
     void App::loadGameObjects()
     {
 
-        // auto skullObject = objectManager
-        //                        .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/skull.obj")
-        //                        .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/skull.jpg")
-        //                        .build({-10.f, 0.5f, -10.f}, {.04f, .04f, .04f});
-        // gameObjects.emplace(skullObject.getId(), std::move(skullObject));
+        auto skullObject = objectManager
+                               .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/skull.obj")
+                               .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/skull.jpg")
+                               .build({-10.f, 0.5f, -10.f}, {.04f, .04f, .04f});
+        gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
-        // auto eyeObject = objectManager
-        //                      .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
-        //                      .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
-        //                      .build({-1.f, -10.f, 0.f}, {.04f, .04f, .04f});
-        // gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
+        auto eyeObject = objectManager
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
+                             .build({-1.f, -10.f, 0.f}, {.04f, .04f, .04f});
+        gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
-        // auto gunObject = objectManager
-        //                      .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/Gun.obj")
-        //                      .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/Gun.jpg")
-        //                      .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
-        // gameObjects.emplace(gunObject.getId(), std::move(gunObject));
+        auto gunObject = objectManager
+                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/Gun.obj")
+                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/Gun.jpg")
+                             .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
+        gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/quad.obj")
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        // auto sword = objectManager
-        //                  .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/sword.obj")
-        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_albedo.jpg")
-        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-        //                  .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     auto swordCopy = sword;
-        //     swordCopy.transform.translation = {4 * i, 0, 0.f};
-        //     gameObjects.emplace(swordCopy.getId(), std::move(swordCopy));
-        // }
-        // auto phone4 = objectManager
-        //                   .addModel("models/phone.obj")
-        //                   .addTexture("textures/T_Telephone_Color.tga.png")
-        //                   .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-        //                   .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
-        //                   .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-        //                   .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-        //                   .build({0.f, 1.f, -6}, {10.f, 10.f, 10.f});
-        // gameObjects.emplace(phone4.getId(), std::move(phone4));
+        auto sword = objectManager
+                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/sword.obj")
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_albedo.jpg")
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        for (int i = 0; i < 5; i++)
+        {
+            auto swordCopy = sword;
+            swordCopy.transform.translation = {4 * i, 0, 0.f};
+            gameObjects.emplace(swordCopy.getId(), std::move(swordCopy));
+        }
+        auto phone4 = objectManager
+                          .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/phone.obj")
+                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Color.tga.png")
+                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                          .build({0.f, 1.f, -6}, {10.f, 10.f, 10.f});
+        gameObjects.emplace(phone4.getId(), std::move(phone4));
     }
     void App::loadLights()
     {

@@ -79,6 +79,8 @@ namespace vke
                 continue;
             ShadowMapPushConstants push{};
             push.lightViewProj = lightViewProj;
+            push.modelMatrix = obj.transform.mat4();
+
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
