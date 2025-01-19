@@ -14,17 +14,17 @@ struct PointLight {
   vec4 position;
   vec4 color;
 };
+
 struct DirectionalLight {
-    vec3 direction; // Direction towards the light source
-    vec3 color;     // RGB color of the light
-    float intensity; // Intensity of the light
+    mat4 lightViewProj;
 };
+
 layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
     mat4 invView;
     vec4 ambientLightColor; // w is intensity
-    PointLight pointLights[10]; // update this number in the engine for the max number of lights
+    PointLight pointLights[10];
     DirectionalLight dirLight;
     int numLights;
 } ubo;
@@ -32,8 +32,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
     mat4 normalMatrix;
-    bool hasNormalMap;
-    mat4 lightViewProj;
+    int hasNormalMap;
 } push;
 
 

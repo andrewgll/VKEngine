@@ -29,9 +29,9 @@ namespace vke
         loadGameObjects();
         loadLights();
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
-                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2)         // Increase if needed
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2*2) // Increase if needed
+                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)         // Increase if needed
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2) // Increase if needed
                          .build();
     }
     App::~App()
@@ -112,6 +112,7 @@ namespace vke
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
+        static glm::vec3 lightDirection = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
@@ -127,6 +128,7 @@ namespace vke
 
             float aspect = vkeRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 50.f);
+
             if (auto commandBuffer = vkeRenderer.beginFrame())
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
@@ -137,21 +139,22 @@ namespace vke
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                ubo.dirLight.direction = glm::normalize(glm::vec3(1.0f, 10.0f, -20.0f));
-                ubo.dirLight.rotation = glm::vec3(0.0f, 0.0f, -1.0f);
-                ubo.dirLight.color = glm::vec3(1.0f, 1.0f, 0.5f);
-                ubo.dirLight.intensity = 1.0f;
+              
+                lightDirection.z -= 0.0005;
+                ubo.dirLight.direction = glm::normalize(lightDirection);
+                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, {0.f, 0.f, -1.f}, 100.f);
+                ubo.dirLight.lightViewProj = lightViewProj;
 
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 vkeRenderer.beginShadowSwapChainRenderPass(commandBuffer);
-                shadowMapSystem.renderShadowMaps(frameInfo, ubo.dirLight);
+                shadowMapSystem.renderShadowMaps(frameInfo, lightViewProj);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
 
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(frameInfo, ubo.dirLight);
+                renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
@@ -163,52 +166,52 @@ namespace vke
     void App::loadGameObjects()
     {
 
-        auto skullObject = objectManager
-                               .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/skull.obj")
-                               .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/skull.jpg")
-                               .build({-1.f, 0.5f, 1.f}, {.04f, .04f, .04f});
-        gameObjects.emplace(skullObject.getId(), std::move(skullObject));
+        // auto skullObject = objectManager
+        //                        .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/skull.obj")
+        //                        .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/skull.jpg")
+        //                        .build({-10.f, 0.5f, -10.f}, {.04f, .04f, .04f});
+        // gameObjects.emplace(skullObject.getId(), std::move(skullObject));
 
-        auto eyeObject = objectManager
-                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
-                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
-                             .build({-1.f, 0.5f, 0.f}, {.04f, .04f, .04f});
-        gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
+        // auto eyeObject = objectManager
+        //                      .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
+        //                      .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
+        //                      .build({-1.f, -10.f, 0.f}, {.04f, .04f, .04f});
+        // gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
-        auto gunObject = objectManager
-                             .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/Gun.obj")
-                             .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/Gun.jpg")
-                             .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
-        gameObjects.emplace(gunObject.getId(), std::move(gunObject));
+        // auto gunObject = objectManager
+        //                      .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/Gun.obj")
+        //                      .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/Gun.jpg")
+        //                      .build({2.f, 0.5f, 0.f}, {1.5f, 1.5f, 1.5f});
+        // gameObjects.emplace(gunObject.getId(), std::move(gunObject));
 
         auto quad = objectManager
                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/quad.obj")
                         .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        auto sword = objectManager
-                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/sword.obj")
-                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_albedo.jpg")
-                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                         .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
-                         .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        for (int i = 0; i < 5; i++)
-        {
-            auto swordCopy = sword;
-            swordCopy.transform.translation = {4*i, 0, 0.f};
-            gameObjects.emplace(swordCopy.getId(), std::move(swordCopy));
-        }
-        auto phone4 = objectManager
-                          .addModel("models/phone.obj")
-                          .addTexture("textures/T_Telephone_Color.tga.png")
-                          .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
-                          .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
-                          .build({0.f, 1.f,  -6}, {10.f, 10.f, 10.f});
-        gameObjects.emplace(phone4.getId(), std::move(phone4));
+        // auto sword = objectManager
+        //                  .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/sword.obj")
+        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_albedo.jpg")
+        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_normal.jpg", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_roughness.jpg", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+        //                  .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
+        //                  .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     auto swordCopy = sword;
+        //     swordCopy.transform.translation = {4 * i, 0, 0.f};
+        //     gameObjects.emplace(swordCopy.getId(), std::move(swordCopy));
+        // }
+        // auto phone4 = objectManager
+        //                   .addModel("models/phone.obj")
+        //                   .addTexture("textures/T_Telephone_Color.tga.png")
+        //                   .addTexture("textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+        //                   .addTexture("textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+        //                   .addTexture("textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+        //                   .addTexture("textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+        //                   .build({0.f, 1.f, -6}, {10.f, 10.f, 10.f});
+        // gameObjects.emplace(phone4.getId(), std::move(phone4));
     }
     void App::loadLights()
     {

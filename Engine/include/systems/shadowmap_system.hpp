@@ -12,10 +12,8 @@
 
 namespace vke
 {
-    VkImageView createShadowMapImageView(VkeDevice &device, int shadowMapExtent, VkImage &shadowMapImage);
-    struct alignas(16) ShadowMapPushConstants
+    struct ShadowMapPushConstants
     {
-        glm::mat4 modelMatrix{1.f};
         glm::mat4 lightViewProj{1.f};
     };
 
@@ -32,7 +30,7 @@ namespace vke
         ShadowMapSystem(const ShadowMapSystem &) = delete;
         ShadowMapSystem &operator=(const ShadowMapSystem &) = delete;
 
-        void renderShadowMaps(FrameInfo &frameInfo, DirectionalLight &dirLight);
+        void renderShadowMaps(FrameInfo &frameInfo, glm::mat4 &lightViewProj);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout &setLayout);

@@ -67,22 +67,8 @@ namespace vke
             pipelineConfig);
     }
 
-    void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo, DirectionalLight &dirLight)
+    void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo, glm::mat4 &lightViewProj)
     {
-        float nearPlane = 0.1f;
-        float farPlane = 100.0f;
-        float lightSize = 50.0f; 
-
-        
-        glm::vec3 lightPosition = dirLight.direction * -1.0f; 
-        glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        
-        glm::mat4 lightProjection = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, nearPlane, farPlane);
-
-        
-        glm::mat4 lightViewProj = lightProjection * lightView;
-
 
         vkePipeline->bind(frameInfo.commandBuffer);
 
@@ -92,8 +78,7 @@ namespace vke
             if (!obj.model)
                 continue;
             ShadowMapPushConstants push{};
-            push.modelMatrix = obj.transform.mat4();
-            push.lightViewProj = lightProjection * lightView;
+            push.lightViewProj = lightViewProj;
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
@@ -104,5 +89,5 @@ namespace vke
             obj.model->bind(frameInfo.commandBuffer);
             obj.model->draw(frameInfo.commandBuffer);
         }
-        }
+    }
 }

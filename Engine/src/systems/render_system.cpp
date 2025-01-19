@@ -58,31 +58,8 @@ namespace vke
             pipelineConfig);
     }
 
-    void RenderSystem::renderGameObjects(FrameInfo &frameInfo, DirectionalLight &dirLight)
+    void RenderSystem::renderGameObjects(FrameInfo &frameInfo)
     {
-
-        glm::vec3 lightPos = -dirLight.direction * 20.0f;
-
-        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), dirLight.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) *
-                                   glm::rotate(glm::mat4(1.0f), dirLight.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)) *
-                                   glm::rotate(glm::mat4(1.0f), dirLight.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::vec3 rotatedDirection = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(dirLight.direction, 0.0f)));
-
-        glm::mat4 lightView = glm::lookAt(
-            lightPos,
-            lightPos + rotatedDirection,
-            glm::vec3(0.0f, 1.0f, 0.0f));
-
-        float nearPlane = 0.1f;
-        float farPlane = 100.0f;
-        float lightFrustumSize = 20.0f;
-        glm::mat4 lightProjection = glm::ortho(
-            -lightFrustumSize, lightFrustumSize,
-            -lightFrustumSize, lightFrustumSize,
-            nearPlane, farPlane);
-
-        glm::mat4 lightViewProj = lightProjection * lightView;
-
         // render
         vkePipeline->bind(frameInfo.commandBuffer);
 
@@ -106,9 +83,7 @@ namespace vke
             SimplePushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();
-            // push.time = frameInfo.frameTime;
             push.hasNormalMap = obj.material->flags.hasNormal;
-            push.lightViewProj = lightViewProj;
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,

@@ -149,8 +149,8 @@ namespace vke
     }
     void VkeRenderer::beginShadowSwapChainRenderPass(VkCommandBuffer commandBuffer)
     {
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[1].depthStencil = {1.0f, 0};
+        std::array<VkClearValue, 1> clearValues{};
+        clearValues[0].depthStencil = {1.0f, 0};
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -160,7 +160,7 @@ namespace vke
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = vkeSwapChain->getShadowMapExtent();
 
-        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
