@@ -28,11 +28,14 @@ namespace vke
     {
         loadGameObjects();
         loadLights();
+        // global pool must be created first
         globalPool = VkeDescriptorPool::Builder(vkeDevice)
-                         .setMaxSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)         // Increase if needed
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkeSwapChain::MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2) // Increase if needed
+                         .setMaxSets(MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2)         // Increase if needed
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT * gameObjects.size() * 2 * 2) // Increase if needed
                          .build();
+        createUBOBuffers();
+        createDescriptors();
     }
     App::~App()
     {
@@ -41,69 +44,13 @@ namespace vke
     {
         glfwSetInputMode(vkeWindow.getGLWFWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-        std::vector<std::unique_ptr<VkeBuffer>> uboBuffers(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < uboBuffers.size(); i++)
-        {
-            uboBuffers[i] = std::make_unique<VkeBuffer>(
-                vkeDevice,
-                sizeof(GlobalUbo),
-                1,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-            uboBuffers[i]->map();
-        }
-
-        auto globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)         // Existing UBO
-                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Shadow map
-                                   .build();
-
-        // for materials
-        auto materialSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                                     .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // albedo
-                                     .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // normal
-                                     .addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // roughness
-                                     .addBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // metallic
-                                     .addBinding(5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // ao
-                                     .build();
         std::vector<VkDescriptorSetLayout> setLayouts = {
             globalSetLayout->getDescriptorSetLayout(),
             materialSetLayout->getDescriptorSetLayout()};
 
-        std::vector<VkDescriptorSet> globalDescriptorSets(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
-        for (int i = 0; i < globalDescriptorSets.size(); i++)
-        {
-            VkDescriptorImageInfo shadowMapInfo{};
-            shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            shadowMapInfo.imageView = vkeRenderer.getShadowMapDepthImageView();
-            shadowMapInfo.sampler = TextureSampler(vkeDevice).getSampler();
-
-            auto bufferInfo = uboBuffers[i]->descriptorInfo();
-            VkeDescriptorWriter(*globalSetLayout, *globalPool)
-                .writeBuffer(0, &bufferInfo)
-                .writeImage(1, &shadowMapInfo)
-                .build(globalDescriptorSets[i]);
-        }
-
-        for (auto &gameObject : gameObjects)
-        {
-            if (gameObject.second.material == nullptr)
-            {
-                continue;
-            }
-            auto material = gameObject.second.material;
-            VkeDescriptorWriter(*materialSetLayout, *globalPool)
-                .writeImage(1, &material->albedo->getDescriptor())
-                .writeImage(2, &material->normal->getDescriptor())
-                .writeImage(3, &material->roughness->getDescriptor())
-                .writeImage(4, &material->metallic->getDescriptor())
-                .writeImage(5, &material->ao->getDescriptor())
-                .build(gameObject.second.descriptorSet);
-        }
-
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
         PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
-        ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), globalSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}};
+        ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), shadowSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}};
 
         VkeCamera camera{};
         auto viewerObject = VkeGameObject::createGameObject();
@@ -112,7 +59,7 @@ namespace vke
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        static glm::vec3 lightDirection = glm::normalize(glm::vec3(0.0f, 1.0f, 1.0f));
+        glm::vec3 direction{1.f, 1.f, 1.f};
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
@@ -133,18 +80,23 @@ namespace vke
             {
                 int frameIndex = vkeRenderer.getFrameIndex();
                 float currentTimeInSeconds = std::chrono::duration<float, std::chrono::seconds::period>(currentTime.time_since_epoch()).count();
-                FrameInfo frameInfo{frameIndex, frameTime, currentTimeInSeconds, commandBuffer, camera, globalDescriptorSets[frameIndex], gameObjects};
+                FrameInfo frameInfo{frameIndex,
+                                    frameTime,
+                                    currentTimeInSeconds,
+                                    commandBuffer,
+                                    camera,
+                                    globalDescriptorSets[frameIndex],
+                                    shadowDescriptorSets[frameIndex],
+                                    gameObjects};
                 // update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-              
-                lightDirection.z -= 0.0005;
-                ubo.dirLight.direction = glm::normalize(lightDirection);
-                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, {0.f, 0.f, -1.f}, 100.f);
-                ubo.dirLight.lightViewProj = lightViewProj;
+                direction.x += 0.0001;
 
+                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, camera.getPosition(), 20.f );
+                ubo.dirLight.lightViewProj = lightViewProj;
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
@@ -175,7 +127,7 @@ namespace vke
         auto eyeObject = objectManager
                              .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/eye.obj")
                              .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/eye.jpg")
-                             .build({-1.f, -10.f, 0.f}, {.04f, .04f, .04f});
+                             .build({-1.f, -1.f, 0.f}, {.04f, .04f, .04f});
         gameObjects.emplace(eyeObject.getId(), std::move(eyeObject));
 
         auto gunObject = objectManager
@@ -186,7 +138,7 @@ namespace vke
 
         auto quad = objectManager
                         .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/quad.obj")
-                        .build({1.f, 1.f, 1.f}, {100.f, 100.f, 100.f});
+                        .build({1.f, 1.f, 1.f}, {1000.f, 1000.f, 1000.f});
         gameObjects.emplace(quad.getId(), std::move(quad));
 
         auto sword = objectManager
@@ -197,7 +149,7 @@ namespace vke
                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_metallic.jpg", TextureType::VKE_TEXTURE_TYPE_METALLIC)
                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/sword_ao.jpg", TextureType::VKE_TEXTURE_TYPE_AO)
                          .build({0.f, -0.1f, 0.f}, {1.f, 1.f, 1.f});
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++)
         {
             auto swordCopy = sword;
             swordCopy.transform.translation = {4 * i, 0, 0.f};
@@ -233,4 +185,77 @@ namespace vke
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }
     }
+    void App::createDescriptors()
+    {
+        globalSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                              .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)         // Existing UBO
+                              .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Shadow map
+                              .build();
+        shadowSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                              .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                              .build();
+        materialSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
+                                .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // albedo
+                                .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // normal
+                                .addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // roughness
+                                .addBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // metallic
+                                .addBinding(5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // ao
+                                .build();
+
+        globalDescriptorSets = std::vector<VkDescriptorSet>(MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < globalDescriptorSets.size(); i++)
+        {
+            VkDescriptorImageInfo shadowMapInfo{};
+            shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            shadowMapInfo.imageView = vkeRenderer.getShadowMapDepthImageView();
+            auto sampler = TextureSampler(vkeDevice, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER).getSampler();
+            shadowMapInfo.sampler = sampler;
+
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            VkeDescriptorWriter(*globalSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)
+                .writeImage(1, &shadowMapInfo)
+                .build(globalDescriptorSets[i]);
+        }
+
+        shadowDescriptorSets = std::vector<VkDescriptorSet>(MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < shadowDescriptorSets.size(); i++)
+        {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            VkeDescriptorWriter(*shadowSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)
+                .build(shadowDescriptorSets[i]);
+        }
+
+        for (auto &gameObject : gameObjects)
+        {
+            if (gameObject.second.material == nullptr)
+            {
+                continue;
+            }
+            auto material = gameObject.second.material;
+            VkeDescriptorWriter(*materialSetLayout, *globalPool)
+                .writeImage(1, &material->albedo->getDescriptor())
+                .writeImage(2, &material->normal->getDescriptor())
+                .writeImage(3, &material->roughness->getDescriptor())
+                .writeImage(4, &material->metallic->getDescriptor())
+                .writeImage(5, &material->ao->getDescriptor())
+                .build(gameObject.second.descriptorSet);
+        }
+    }
+    void App::createUBOBuffers()
+    {
+        uboBuffers = std::vector<std::unique_ptr<VkeBuffer>>(MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < uboBuffers.size(); i++)
+        {
+            uboBuffers[i] = std::make_unique<VkeBuffer>(
+                vkeDevice,
+                sizeof(GlobalUbo),
+                1,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+            uboBuffers[i]->map();
+        }
+    }
+
 }

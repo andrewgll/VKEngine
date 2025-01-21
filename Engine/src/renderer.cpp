@@ -20,7 +20,7 @@ namespace vke
 
     void VkeRenderer::createCommandBuffers()
     {
-        commandBuffers.resize(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
+        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -113,7 +113,7 @@ namespace vke
             throw std::runtime_error("failed to present swap chain image. Error code: " + std::to_string(result));
         }
         isFrameStarted = false;
-        currentFrameIndex = (currentFrameIndex + 1) % VkeSwapChain::MAX_FRAMES_IN_FLIGHT;
+        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     }
     void VkeRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer)
     {

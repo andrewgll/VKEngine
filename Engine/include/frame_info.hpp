@@ -19,9 +19,10 @@ namespace vke
     struct DirectionalLight
     {
         glm::mat4 lightViewProj{1};
-        glm::vec3 direction{0.f, 0.f, 0.f};
+        // x z y
+        glm::vec3 direction{0.f, 1.f, 1.f};
         alignas(16) glm::vec3 color{1.0f, 1.f, 0.4f};
-        float intensity{0.1f};
+        float intensity{1.f};
     };
 
     struct GlobalUbo
@@ -42,17 +43,21 @@ namespace vke
         VkCommandBuffer commandBuffer;
         VkeCamera &camera;
         VkDescriptorSet globalDescriptorSet;
+        VkDescriptorSet shadowDescriptorSet;
         VkeGameObject::Map &gameObjects;
     };
-    inline glm::mat4 getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &sceneCenter, float sceneRadius)
+    inline glm::mat4 getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &cameraPosition, float sceneRadius)
     {
         float zNear = 0.1f;
-        float zFar = sceneRadius * 2.0f;      
-        float lightSize = sceneRadius * 2.0f; 
+        float zFar = sceneRadius * 1.5f;      
+        float lightSize = sceneRadius * 1.5f;
+        glm::vec3 lightTarget = cameraPosition;                                   
+        glm::vec3 lightPosition = lightTarget - dirLight.direction * sceneRadius; 
+
         glm::mat4 depthProjectionMatrix = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, zNear, zFar);
-        glm::mat4 depthViewMatrix = glm::lookAt(sceneCenter - dirLight.direction * sceneRadius, sceneCenter, glm::vec3(0, 1, 0));
-        glm::mat4 depthModelMatrix = glm::mat4(1.0f);
-        return depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+        depthProjectionMatrix[1][1] *= -1.0f;
+        glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightTarget, glm::vec3(0, 1, 0));
+        return depthProjectionMatrix * depthViewMatrix;
     }
 
 } // namespace vke

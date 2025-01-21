@@ -8,7 +8,7 @@ namespace vke
     class TextureSampler
     {
     public:
-        TextureSampler(VkeDevice &device);
+        TextureSampler(VkeDevice &device, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 
         // Not copyable or movable
         TextureSampler(TextureSampler &&) = delete;
@@ -19,7 +19,7 @@ namespace vke
         VkSampler getSampler() { return textureSampler; }
 
     private:
-        void createTextureSampler();
+        void createTextureSampler(VkSamplerAddressMode addressMode);
         VkeDevice &vkeDevice;
         VkSampler textureSampler;
     };

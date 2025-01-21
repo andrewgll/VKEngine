@@ -15,7 +15,6 @@ namespace vke
     struct ShadowMapPushConstants
     {
         glm::mat4 modelMatrix{1.f};
-        glm::mat4 lightViewProj{1.f};
     };
 
     class ShadowMapSystem

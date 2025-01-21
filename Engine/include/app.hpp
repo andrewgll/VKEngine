@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+
 #include <vulkan/vulkan.h>
 
 namespace vke
@@ -32,6 +33,8 @@ namespace vke
         VkDescriptorSet createDescriptorSet(VkeTexture &texture);
         void loadGameObjects();
         void loadLights();
+        void createDescriptors();
+        void createUBOBuffers();
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
                             "VKEngine v2"};
@@ -40,5 +43,13 @@ namespace vke
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
         VkeGameObject::Map gameObjects;
+
+        std::vector<std::unique_ptr<VkeBuffer>> uboBuffers;
+        std::unique_ptr<VkeDescriptorSetLayout> globalSetLayout;
+        std::unique_ptr<VkeDescriptorSetLayout> shadowSetLayout;
+        std::unique_ptr<VkeDescriptorSetLayout> materialSetLayout;
+
+        std::vector<VkDescriptorSet> globalDescriptorSets;
+        std::vector<VkDescriptorSet> shadowDescriptorSets;
     };
 } // namespace vke

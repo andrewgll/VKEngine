@@ -89,17 +89,14 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 
 float shadowCalculation(vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5; 
-    if (projCoords.z < 0.0 || projCoords.z > 1.0) return 1.0; 
+    vec2 uv = projCoords.xy * 0.5 + 0.5;
+    float z = projCoords.z*0.5+0.5;
 
-    projCoords.xy = clamp(projCoords.xy, 0.0, 1.0);
+    float depth = texture(shadowMap, uv).x; 
+    float bias = 0.005;
 
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    float currentDepth = projCoords.z;
-
-    float bias = max(0.005 * (1.0 - dot(fragNormalWorld, -ubo.dirLight.direction)), 0.0005);
-
-    return currentDepth > closestDepth+bias? 0.0 : 1.0;
+    return depth+bias < z ? 0.1 : 1.0;
+    // return depth;
 }
 
 
@@ -130,7 +127,7 @@ void main() {
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
         vec3 nominator = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // Prevent divide by zero
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; 
         vec3 specular = nominator / denominator;
 
         // kS is the specular reflectance, kD is diffuse reflectance
@@ -165,17 +162,16 @@ void main() {
     // Apply Shadow Mapping for Directional Light
     vec4 fragPosLightSpace = ubo.dirLight.lightViewProj * vec4(fragPosWorld, 1.0);
     float shadow = shadowCalculation(fragPosLightSpace);
-    Lo *= shadow; // Reduce light intensity based on shadow
 
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
     // Ambient Lighting
     vec3 ambient = (ubo.ambientLightColor.rgb * ubo.ambientLightColor.a) * albedo * ao;
     vec3 color = ambient + Lo; 
-
+    color *= shadow;
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-
+    
     outColor = vec4(color,1.0);
 }
