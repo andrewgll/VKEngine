@@ -14,6 +14,8 @@ Dependencies you need to build this engine:
 For now Makefile is compatible only with MacOS and homebrew(Support for windows will be added later).
 ## How to build:
 ```sh
+run install.sh or install.bat script to download all dependencies
+
 make
 ``` 
 for debug build:
