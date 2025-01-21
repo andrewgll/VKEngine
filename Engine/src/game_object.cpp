@@ -1,4 +1,5 @@
 #include "game_object.hpp"
+#include <stdexcept>
 
 #include "descriptors.hpp"
 
@@ -69,6 +70,46 @@ namespace vke
         gameObj.pointLight = std::make_unique<PointLightComponent>();
         gameObj.pointLight->lightIntensity = intensity;
         return gameObj;
+    }
+    VkeGameObject::VkeGameObject(const VkeGameObject &other)
+        : id{createGameObject().id},
+          model{other.model},
+          material{other.material},
+          color{other.color},
+          transform{other.transform},
+          descriptorSet{other.descriptorSet},
+          isOrthographic{other.isOrthographic},
+          orthographicSize{other.orthographicSize},
+          fieldOfView{other.fieldOfView},
+          aspectRatio{other.aspectRatio},
+          intensity{other.intensity},
+          nearPlane{other.nearPlane},
+          farPlane{other.farPlane}
+    {
+        if (other.pointLight)
+        {
+            pointLight = std::make_unique<PointLightComponent>(*other.pointLight);
+        }
+    }
+    glm::mat4 VkeGameObject::getViewProjectionMatrix()
+    {
+        glm::vec3 up = glm::abs(transform.rotation.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::mat4 lightView = glm::lookAt(transform.translation, transform.translation + transform.rotation, up);
+
+        glm::mat4 lightProjection;
+
+        if (isOrthographic)
+        {
+            float orthoSize = 10.0f;
+            lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+        }
+        else
+        {
+            lightProjection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+            lightProjection[1][1] *= -1;
+        }
+
+        return lightProjection * lightView;
     }
     void VkeGameObject::initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer)
     {

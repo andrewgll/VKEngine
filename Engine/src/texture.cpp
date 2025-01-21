@@ -97,7 +97,7 @@ namespace vke
 
         if (!pixels)
         {
-            throw std::runtime_error("failed to load texture image!");
+            throw std::runtime_error("failed to load texture image! " + filename);
         }
 
         VkeBuffer stagingBuffer = VkeBuffer(
@@ -200,7 +200,8 @@ namespace vke
             &region);
         vkeDevice.endSingleTimeCommands(commandBuffer);
     }
-    void VkeTexture::createImageInfo(){
+    void VkeTexture::createImageInfo()
+    {
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.sampler = getSampler();
         imageInfo.imageView = getImageView();

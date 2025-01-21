@@ -2,14 +2,16 @@
 
 #include "device.hpp"
 
+#include <stdexcept>
+
 namespace vke
 {
-    TextureSampler::TextureSampler(VkeDevice &device) : vkeDevice(device)
+    TextureSampler::TextureSampler(VkeDevice &device, VkSamplerAddressMode addressMode) : vkeDevice(device)
     {
-        createTextureSampler();
+        createTextureSampler(addressMode);
     }
 
-    void TextureSampler::createTextureSampler()
+    void TextureSampler::createTextureSampler(VkSamplerAddressMode addressMode)
     {
         VkPhysicalDeviceProperties properties{};
         vkGetPhysicalDeviceProperties(vkeDevice.getPhysicalDevice(), &properties);
@@ -20,14 +22,14 @@ namespace vke
         samplerInfo.minFilter = VK_FILTER_LINEAR;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeU = addressMode;
+        samplerInfo.addressModeV = addressMode;
+        samplerInfo.addressModeW = addressMode;
         samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.maxAnisotropy = 16.0f;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = 100.f;
-        samplerInfo.maxAnisotropy = 16.0f;
 
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;

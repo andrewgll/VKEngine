@@ -3,9 +3,11 @@
 #include "texture.hpp"
 #include "model.hpp"
 #include "game_object.hpp"
+#include "settings.hpp"
 
 #include "memory"
 #include <unordered_map>
+#include <vulkan/vulkan.h>
 
 namespace vke
 {
@@ -37,11 +39,11 @@ namespace vke
     private:
         VkeDevice &vkeDevice;
         float textureCount{0};
-        const std::string defaultTexturePath ="textures/default_albedo.jpg";
-        const std::string defaultNormalPath = "textures/default_normal.jpg";
-        const std::string defaultRoughnessPath = "textures/default_roughness.jpg";
-        const std::string defaultMetallicPath = "textures/default_metallic.jpg";
-        const std::string defaultAOPath = "textures/default_AO.jpg";
+        const std::string defaultTexturePath = std::string(VKENGINE_ABSOLUTE_PATH) + "textures/default_albedo.jpg";
+        const std::string defaultNormalPath = std::string(VKENGINE_ABSOLUTE_PATH) + "textures/default_normal.jpg";
+        const std::string defaultRoughnessPath = std::string(VKENGINE_ABSOLUTE_PATH) + "textures/default_roughness.jpg";
+        const std::string defaultMetallicPath = std::string(VKENGINE_ABSOLUTE_PATH) + "textures/default_metallic.jpg";
+        const std::string defaultAOPath = std::string(VKENGINE_ABSOLUTE_PATH) + "textures/default_AO.jpg";
 
         std::shared_ptr<VkeModel> currentModel;
 

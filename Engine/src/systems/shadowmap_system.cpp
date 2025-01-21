@@ -1,3 +1,4 @@
+#include "systems/shadowmap_system.hpp"
 #include "systems/render_system.hpp"
 
 // libs
@@ -13,27 +14,33 @@
 
 namespace vke
 {
-    RenderSystem::RenderSystem(VkeDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> &setLayouts) : vkeDevice{device}
+
+    ShadowMapSystem::ShadowMapSystem(
+        VkeDevice &device,
+        VkRenderPass shadowRenderPass,
+        VkDescriptorSetLayout globalSetLayout,
+        VkExtent2D shadowMapExtent) : vkeDevice{device},
+                                      shadowRenderPass{shadowRenderPass},
+                                      shadowMapExtent{shadowMapExtent}
     {
-        createPipelineLayout(setLayouts);
-        createPipeline(renderPass);
+        createPipelineLayout(globalSetLayout);
+        createPipeline(shadowRenderPass);
     }
-    RenderSystem::~RenderSystem()
+    ShadowMapSystem::~ShadowMapSystem()
     {
         vkDestroyPipelineLayout(vkeDevice.device(), pipelineLayout, nullptr);
     }
-
-    void RenderSystem::createPipelineLayout(std::vector<VkDescriptorSetLayout> &setLayouts)
+    void ShadowMapSystem::createPipelineLayout(VkDescriptorSetLayout &setLayout)
     {
         VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
+        pushConstantRange.size = sizeof(ShadowMapPushConstants);
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = setLayouts.data();
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &setLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -43,63 +50,52 @@ namespace vke
         }
     }
 
-    void RenderSystem::createPipeline(VkRenderPass renderPass)
+    void ShadowMapSystem::createPipeline(VkRenderPass renderPass)
     {
-        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline laout");
+        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         PipelineConfigInfo pipelineConfig{};
         VkePipeline::defaultPipelineConfigInfo(pipelineConfig);
+        VkePipeline::defaultShadowPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
+
         pipelineConfig.pipelineLayout = pipelineLayout;
         vkePipeline = std::make_unique<VkePipeline>(
             vkeDevice,
-            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shader.vert.spv",
-            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shader.frag.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shadow.vert.spv",
+            std::string(VKENGINE_ABSOLUTE_PATH) + "Engine/shaders/shadow.frag.spv",
             pipelineConfig);
     }
 
-    void RenderSystem::renderGameObjects(FrameInfo &frameInfo)
+    void ShadowMapSystem::renderShadowMaps(FrameInfo &frameInfo, glm::mat4 &lightViewProj)
     {
-        // render
-        vkePipeline->bind(frameInfo.commandBuffer);
 
+        vkePipeline->bind(frameInfo.commandBuffer);
         vkCmdBindDescriptorSets(
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
             0,
             1,
-            &frameInfo.globalDescriptorSet,
+            &frameInfo.shadowDescriptorSet,
             0,
             nullptr);
 
         for (auto &kv : frameInfo.gameObjects)
         {
             auto &obj = kv.second;
-            if (obj.model == nullptr)
-            {
+            if (!obj.model)
                 continue;
-            }
-            SimplePushConstantData push{};
+            ShadowMapPushConstants push{};
             push.modelMatrix = obj.transform.mat4();
-            push.normalMatrix = obj.transform.normalMatrix();
-            push.hasNormalMap = obj.material->flags.hasNormal;
+
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
                 pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                VK_SHADER_STAGE_VERTEX_BIT,
                 0,
-                sizeof(SimplePushConstantData),
+                sizeof(ShadowMapPushConstants),
                 &push);
-            vkCmdBindDescriptorSets(
-                frameInfo.commandBuffer,
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayout,
-                1,
-                1,
-                &obj.descriptorSet,
-                0,
-                nullptr);
             obj.model->bind(frameInfo.commandBuffer);
             obj.model->draw(frameInfo.commandBuffer);
         }

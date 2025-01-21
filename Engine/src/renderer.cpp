@@ -1,5 +1,7 @@
 #include "renderer.hpp"
 
+#include "app.hpp"
+
 // std
 #include <stdexcept>
 #include <array>
@@ -18,7 +20,7 @@ namespace vke
 
     void VkeRenderer::createCommandBuffers()
     {
-        commandBuffers.resize(VkeSwapChain::MAX_FRAMES_IN_FLIGHT);
+        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -40,18 +42,21 @@ namespace vke
             glfwWaitEvents();
         }
         vkDeviceWaitIdle(vkeDevice.device());
+        VkExtent2D shadowExtent = {SHADOWMAP_DIM, SHADOWMAP_DIM};
+
         if (vkeSwapChain == nullptr)
         {
-            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent);
+            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent, shadowExtent);
         }
         else
         {
             std::shared_ptr<VkeSwapChain> oldSwapChain = std::move(vkeSwapChain);
-            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent, oldSwapChain);
+            vkeSwapChain = std::make_unique<VkeSwapChain>(vkeDevice, extent, shadowExtent, oldSwapChain);
 
-            if(!oldSwapChain->compareSwapFormats(*vkeSwapChain)){
+            if (!oldSwapChain->compareSwapFormats(*vkeSwapChain))
+            {
                 throw std::runtime_error("Swap chain image or depth format has changed");
-            } 
+            }
         }
     }
     void VkeRenderer::freeCommandBuffers()
@@ -108,12 +113,13 @@ namespace vke
             throw std::runtime_error("failed to present swap chain image. Error code: " + std::to_string(result));
         }
         isFrameStarted = false;
-        currentFrameIndex = (currentFrameIndex + 1) % VkeSwapChain::MAX_FRAMES_IN_FLIGHT;
+        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     }
     void VkeRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer)
     {
         assert(isFrameStarted && "can't call beginSwapChainRenderPass if frame not in progress");
         assert(commandBuffer == getCurrentCommandBuffer() && "cannot begin render pass on command buffer from a different frame");
+
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = vkeSwapChain->getRenderPass();
@@ -135,6 +141,35 @@ namespace vke
         viewport.y = 0.0f;
         viewport.width = static_cast<float>(vkeSwapChain->getSwapChainExtent().width);
         viewport.height = static_cast<float>(vkeSwapChain->getSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
+    void VkeRenderer::beginShadowSwapChainRenderPass(VkCommandBuffer commandBuffer)
+    {
+        std::array<VkClearValue, 1> clearValues{};
+        clearValues[0].depthStencil = {1.0f, 0};
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = vkeSwapChain->getShadowRenderPass();
+        renderPassInfo.framebuffer = vkeSwapChain->getShadowMapFrameBuffer();
+
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = vkeSwapChain->getShadowMapExtent();
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(vkeSwapChain->getShadowMapExtent().width);
+        viewport.height = static_cast<float>(vkeSwapChain->getShadowMapExtent().height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};

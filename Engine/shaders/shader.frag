@@ -5,6 +5,8 @@ layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUv;
 
+layout(set = 0, binding = 1) uniform sampler2D shadowMap; 
+
 layout(set = 1, binding = 1) uniform sampler2D albedoTexture;
 layout(set = 1, binding = 2) uniform sampler2D normalTexture;
 layout(set = 1, binding = 3) uniform sampler2D roughnessTexture;
@@ -20,6 +22,7 @@ struct PointLight {
     vec4 color;    // w is intensity
 };
 struct DirectionalLight {
+    mat4 lightViewProj;
     vec3 direction; // Direction towards the light source
     vec3 color;     // RGB color of the light
     float intensity; // Intensity of the light
@@ -37,13 +40,13 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
-    mat4 normalMatrix;
-    bool hasNormalMap;
+    mat4 normalMatrix; 
+    int hasNormalMap;
 } push;
 
 vec3 getNormal() {
     vec3 normal = fragNormalWorld;
-    if (push.hasNormalMap) {
+    if (push.hasNormalMap == 1) {
         vec3 tangentNormal = texture(normalTexture, fragUv).rgb * 2.0 - 1.0;
         vec3 T = normalize(mat3(push.normalMatrix) * vec3(1.0, 0.0, 0.0));
         vec3 B = normalize(mat3(push.normalMatrix) * vec3(0.0, 1.0, 0.0));
@@ -84,13 +87,26 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+float shadowCalculation(vec4 fragPosLightSpace) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    vec2 uv = projCoords.xy * 0.5 + 0.5;
+    float z = projCoords.z*0.5+0.5;
+
+    float depth = texture(shadowMap, uv).x; 
+    float bias = 0.005;
+
+    return depth+bias < z ? 0.1 : 1.0;
+    // return depth;
+}
+
+
 void main() {
-    vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); // sRGB to linear
+    vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); 
     float metallic = texture(metallicTexture, fragUv).r;
-    float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); // Avoid zero roughness
+    float roughness = clamp(texture(roughnessTexture, fragUv).r, 0.05, 1.0); 
     float ao = texture(aoTexture, fragUv).r;
 
-    vec3 N = getNormal();
+    vec3 N = normalize(getNormal());
     vec3 V = normalize(ubo.invView[3].xyz - fragPosWorld);
 
     vec3 F0 = vec3(0.04); // Default dielectric reflectance
@@ -111,7 +127,7 @@ void main() {
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
         vec3 nominator = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // Prevent divide by zero
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; 
         vec3 specular = nominator / denominator;
 
         // kS is the specular reflectance, kD is diffuse reflectance
@@ -123,7 +139,7 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
-     // Calculate Directional Light Contribution
+    // Calculate Directional Light Contribution
     vec3 L_dir = normalize(-ubo.dirLight.direction); // Light direction (towards light)
     vec3 H_dir = normalize(V + L_dir);
     vec3 radiance_dir = ubo.dirLight.color * ubo.dirLight.intensity;
@@ -142,17 +158,20 @@ void main() {
 
     float NdotL_dir = max(dot(N, L_dir), 0.0);
     Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+
+    // Apply Shadow Mapping for Directional Light
+    vec4 fragPosLightSpace = ubo.dirLight.lightViewProj * vec4(fragPosWorld, 1.0);
+    float shadow = shadowCalculation(fragPosLightSpace);
+
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
     // Ambient Lighting
     vec3 ambient = (ubo.ambientLightColor.rgb * ubo.ambientLightColor.a) * albedo * ao;
-    vec3 color = ambient * ao + Lo; 
-
+    vec3 color = ambient + Lo; 
+    color *= shadow;
     // Gamma Correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-
-    outColor = vec4(color,  1);
-
-    // outColor = vec4(ubo.dirLight., 1.0);
+    
+    outColor = vec4(color,1.0);
 }

@@ -7,6 +7,7 @@
 // libs
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <vulkan/vulkan.h>
 // std
 #include <memory>
 #include <unordered_map>
@@ -20,7 +21,7 @@ namespace vke
         bool hasRoughness = false;
         bool hasMetallic = false;
         bool hasAO = false;
-    }; 
+    };
     struct VkeMaterial
     {
         std::shared_ptr<VkeTexture> albedo;
@@ -59,14 +60,13 @@ namespace vke
         }
 
         static VkeGameObject makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+        VkeGameObject(const VkeGameObject &);
 
-        VkeGameObject(const VkeGameObject &) = delete;
         VkeGameObject &operator=(const VkeGameObject &) = delete;
         VkeGameObject(VkeGameObject &&) = default;
         VkeGameObject &operator=(VkeGameObject &&) = default;
-
         void initializeDescriptorSet(VkeDevice &device, VkeDescriptorSetLayout &layout, VkeDescriptorPool &globalDescriptorPool, VkeBuffer &uboBuffer);
-
+        glm::mat4 getViewProjectionMatrix();
         const id_t getId()
         {
             return id;
@@ -81,6 +81,14 @@ namespace vke
             pointLight = nullptr;
 
     private:
+        bool isOrthographic = true;
+        float orthographicSize = 10.0f;
+        float fieldOfView = 45.0f;
+        float aspectRatio = 1.0f;
+        float intensity;
+
+        float nearPlane;
+        float farPlane;
         VkeGameObject(id_t objId) : id{objId} {}
 
         id_t id;

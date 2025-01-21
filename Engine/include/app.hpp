@@ -6,19 +6,20 @@
 #include "renderer.hpp"
 #include "descriptors.hpp"
 #include "object_manager.hpp"
+#include "light_object.hpp"
 
 // std
 #include <memory>
 #include <vector>
+
+
+#include <vulkan/vulkan.h>
 
 namespace vke
 {
     class App
     {
     public:
-        static constexpr int WIDTH = 1920;
-        static constexpr int HEIGHT = 1080;
-
         App();
         ~App();
 
@@ -31,6 +32,9 @@ namespace vke
     private:
         VkDescriptorSet createDescriptorSet(VkeTexture &texture);
         void loadGameObjects();
+        void loadLights();
+        void createDescriptors();
+        void createUBOBuffers();
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
                             "VKEngine v2"};
@@ -39,5 +43,13 @@ namespace vke
 
         std::unique_ptr<VkeDescriptorPool> globalPool{};
         VkeGameObject::Map gameObjects;
+
+        std::vector<std::unique_ptr<VkeBuffer>> uboBuffers;
+        std::unique_ptr<VkeDescriptorSetLayout> globalSetLayout;
+        std::unique_ptr<VkeDescriptorSetLayout> shadowSetLayout;
+        std::unique_ptr<VkeDescriptorSetLayout> materialSetLayout;
+
+        std::vector<VkDescriptorSet> globalDescriptorSets;
+        std::vector<VkDescriptorSet> shadowDescriptorSets;
     };
 } // namespace vke

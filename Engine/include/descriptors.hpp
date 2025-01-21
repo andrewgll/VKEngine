@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <vulkan/vulkan.h>
+
 namespace vke
 {
 

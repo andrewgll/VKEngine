@@ -4,6 +4,7 @@
 #include "device.hpp"
 #include "swap_chain.hpp"
 
+#include <vulkan/vulkan.h>
 // std
 #include <cassert>
 #include <memory>
@@ -21,6 +22,10 @@ namespace vke
         VkeRenderer &operator=(const VkeRenderer &) = delete;
 
         VkRenderPass getSwapChainRenderPass() const { return vkeSwapChain->getRenderPass(); }
+        VkRenderPass getShadowMapRenderPass() const { return vkeSwapChain->getShadowRenderPass(); }
+        VkImageView getShadowMapDepthImageView() const { return vkeSwapChain->getShadowDepthImageView(); }
+        VkFramebuffer getSwapChainFrameBuffer(int index) const { return vkeSwapChain->getFrameBuffer(index); }
+        VkFramebuffer getShadowMapFrameBuffer() const { return vkeSwapChain->getShadowMapFrameBuffer(); }
         float getAspectRatio() const { return vkeSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; }
 
@@ -38,6 +43,7 @@ namespace vke
         VkCommandBuffer beginFrame();
         void endFrame();
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
+        void beginShadowSwapChainRenderPass(VkCommandBuffer commandBuffer);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
     private:

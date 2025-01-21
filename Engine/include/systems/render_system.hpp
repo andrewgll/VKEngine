@@ -11,6 +11,12 @@
 
 namespace vke
 {
+    struct SimplePushConstantData
+    {
+        glm::mat4 modelMatrix{1.f};   // 64 bytes
+        glm::mat4 normalMatrix{1.f};  // 64 bytes
+        int hasNormalMap{0};          // 4 bytes (explicitly make it an int for alignment)
+    };
     class RenderSystem
     {
     public:
