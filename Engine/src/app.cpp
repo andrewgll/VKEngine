@@ -59,7 +59,7 @@ namespace vke
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        glm::vec3 direction{1.f, 1.f, 1.f};
+        glm::vec3 direction{0.f, 1.f, 1.f}; // x z y
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
@@ -93,9 +93,10 @@ namespace vke
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                direction.x += 0.0001;
-
-                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, camera.getPosition(), 20.f );
+                direction.y += 0.0008;
+                ubo.dirLight.direction = direction;
+                
+                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, camera.getPosition(), 5.f);
                 ubo.dirLight.lightViewProj = lightViewProj;
                 pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
@@ -157,11 +158,11 @@ namespace vke
         }
         auto phone4 = objectManager
                           .addModel(std::string(VKENGINE_ABSOLUTE_PATH) + "models/phone.obj")
-                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Color.tga.png")
-                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
-                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
-                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
-                          .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
+                        //   .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Color.tga.png")
+                        //   .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Normal.tga.png", TextureType::VKE_TEXTURE_TYPE_NORMAL)
+                        //   .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_AO.tga.png", TextureType::VKE_TEXTURE_TYPE_AO)
+                        //   .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Metallic.tga.png", TextureType::VKE_TEXTURE_TYPE_METALLIC)
+                        //   .addTexture(std::string(VKENGINE_ABSOLUTE_PATH) + "textures/T_Telephone_Rough.tga.png", TextureType::VKE_TEXTURE_TYPE_ROUGHNESS)
                           .build({0.f, 1.f, -6}, {10.f, 10.f, 10.f});
         gameObjects.emplace(phone4.getId(), std::move(phone4));
     }
@@ -257,5 +258,17 @@ namespace vke
             uboBuffers[i]->map();
         }
     }
+    glm::mat4 App::getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &cameraPosition, float sceneRadius)
+    {
+        float zNear = 0.1f;
+        float zFar = 20.f;
+        float lightSize = sceneRadius * 2.f;
+        glm::vec3 lightTarget = cameraPosition;
+        glm::vec3 lightPosition = lightTarget - dirLight.direction * sceneRadius;
 
+        glm::mat4 depthProjectionMatrix = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, zNear, zFar);
+        depthProjectionMatrix[1][1] *= -1.0f;
+        glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightTarget, glm::vec3(0, 1, 0));
+        return depthProjectionMatrix * depthViewMatrix;
+    }
 }

@@ -46,18 +46,6 @@ namespace vke
         VkDescriptorSet shadowDescriptorSet;
         VkeGameObject::Map &gameObjects;
     };
-    inline glm::mat4 getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &cameraPosition, float sceneRadius)
-    {
-        float zNear = 0.1f;
-        float zFar = sceneRadius * 1.5f;      
-        float lightSize = sceneRadius * 1.5f;
-        glm::vec3 lightTarget = cameraPosition;                                   
-        glm::vec3 lightPosition = lightTarget - dirLight.direction * sceneRadius; 
-
-        glm::mat4 depthProjectionMatrix = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, zNear, zFar);
-        depthProjectionMatrix[1][1] *= -1.0f;
-        glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightTarget, glm::vec3(0, 1, 0));
-        return depthProjectionMatrix * depthViewMatrix;
-    }
+   
 
 } // namespace vke

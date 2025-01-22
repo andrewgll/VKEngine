@@ -10,6 +10,8 @@ layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fragNormalWorld; 
 layout(location = 3) out vec2 fragUv;
 
+layout(location = 4) out vec4 lightSpacePos;
+
 struct PointLight {
   vec4 position;
   vec4 color;
@@ -44,4 +46,5 @@ void main() {
     fragPosWorld = positionWorld.xyz;
     fragColor = color;
     fragUv = uv;
+    lightSpacePos = ubo.dirLight.lightViewProj * push.modelMatrix * vec4(position, 1.0);
 } 

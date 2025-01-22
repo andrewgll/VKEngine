@@ -7,11 +7,11 @@
 #include "descriptors.hpp"
 #include "object_manager.hpp"
 #include "light_object.hpp"
+#include "frame_info.hpp"
 
 // std
 #include <memory>
 #include <vector>
-
 
 #include <vulkan/vulkan.h>
 
@@ -35,6 +35,7 @@ namespace vke
         void loadLights();
         void createDescriptors();
         void createUBOBuffers();
+        glm::mat4 getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &cameraPosition, float sceneRadius);
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
                             "VKEngine v2"};

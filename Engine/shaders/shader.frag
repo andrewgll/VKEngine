@@ -4,6 +4,7 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUv;
+layout(location = 4) in vec4 lightSpacePos;
 
 layout(set = 0, binding = 1) uniform sampler2D shadowMap; 
 
@@ -87,18 +88,15 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-float shadowCalculation(vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+float shadowCalculation() {
+    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     vec2 uv = projCoords.xy * 0.5 + 0.5;
     float z = projCoords.z*0.5+0.5;
 
     float depth = texture(shadowMap, uv).x; 
     float bias = 0.005;
-
-    return depth+bias < z ? 0.1 : 1.0;
-    // return depth;
+    return z - bias > depth ? 0.2 : 1.0;
 }
-
 
 void main() {
     vec3 albedo = pow(texture(albedoTexture, fragUv).rgb, vec3(2.2)); 
@@ -159,9 +157,7 @@ void main() {
     float NdotL_dir = max(dot(N, L_dir), 0.0);
     Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
 
-    // Apply Shadow Mapping for Directional Light
-    vec4 fragPosLightSpace = ubo.dirLight.lightViewProj * vec4(fragPosWorld, 1.0);
-    float shadow = shadowCalculation(fragPosLightSpace);
+    float shadow = shadowCalculation();
 
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 
