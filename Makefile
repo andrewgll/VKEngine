@@ -37,6 +37,9 @@ else
 		INCLUDE_FLAGS := -IEngine/src -IEngine/include -I$(VULKAN_SDK)/include -I/opt/homebrew/include -Ilibs
 		LINKER_FLAGS := -lvulkan -lglfw -L/opt/homebrew/lib -Wl,-rpath,$(VULKAN_SDK)/lib -Wl,-rpath,/opt/homebrew/lib
 
+    	RM := rm -r
+		MKDIR := mkdir -p
+
 		SRC_FILES := $(shell find $(ASSEMBLY) -type f -name "*.cpp")
 		OBJ_FILES := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
@@ -48,17 +51,22 @@ else
 	endif
 endif
 
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
+	@mkdir -p $(@D)
+	@echo "Compiling: $<"
+	@$(COMPILER) $(COMPILER_FLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-build: $(BUILD_DIR) $(SHADER_OBJ_FILES)
+
+build: $(BUILD_DIR) $(SHADER_OBJ_FILES) $(OBJ_FILES)
 	@echo "Building in Release mode"
-	@$(COMPILER) $(COMPILER_FLAGS) $(RELEASE_FLAGS) $(SRC_FILES) -o $(BUILD_DIR)/app $(INCLUDE_FLAGS) $(LINKER_FLAGS) $(CFLAGS)
+	@$(COMPILER) $(COMPILER_FLAGS) $(RELEASE_FLAGS) $(OBJ_FILES) -o $(BUILD_DIR)/app $(INCLUDE_FLAGS) $(LINKER_FLAGS)
 	@echo "Release build completed! Executable created at $(BUILD_DIR)/app"
 
-debug: $(BUILD_DIR) $(SHADER_OBJ_FILES)
-	@echo VULKAN_SDK=$(VULKAN_SDK)
+debug: $(BUILD_DIR) $(SHADER_OBJ_FILES) $(OBJ_FILES)
 	@echo "Building in Debug mode" 
-	@$(COMPILER) $(COMPILER_FLAGS) $(DEBUG_FLAGS) $(SRC_FILES) -o $(BUILD_DIR)/app $(INCLUDE_FLAGS) $(LINKER_FLAGS) $(CFLAGS)
+	@$(COMPILER) $(COMPILER_FLAGS) $(DEBUG_FLAGS) $(OBJ_FILES) -o $(BUILD_DIR)/app $(INCLUDE_FLAGS) $(LINKER_FLAGS)
 	@echo "Debug build completed! Executable created at $(BUILD_DIR)/app"
+
 %.vert.spv: %.vert
 	@echo "Compiling vertex shader: $<"
 	@$(GLSLC) -o $@ $<
@@ -68,6 +76,7 @@ debug: $(BUILD_DIR) $(SHADER_OBJ_FILES)
 	@$(GLSLC) -o $@ $<
 
 $(BUILD_DIR):
+	@echo "Creating build directory..."
 	@$(MKDIR) $(BUILD_DIR)
 
 clean:
