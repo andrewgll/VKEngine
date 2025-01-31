@@ -16,4 +16,4 @@
 #define HEIGHT 1080
 
 #define MAX_FRAME_TIME 0.1f
-#define SHADOWMAP_DIM 2048
+#define SHADOWMAP_DIM 4096

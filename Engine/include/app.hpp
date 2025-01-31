@@ -7,11 +7,11 @@
 #include "descriptors.hpp"
 #include "object_manager.hpp"
 #include "light_object.hpp"
+#include "frame_info.hpp"
 
 // std
 #include <memory>
 #include <vector>
-
 
 #include <vulkan/vulkan.h>
 
@@ -45,6 +45,7 @@ namespace vke
         VkeGameObject::Map gameObjects;
 
         std::vector<std::unique_ptr<VkeBuffer>> uboBuffers;
+        std::vector<std::unique_ptr<VkeBuffer>> shadowUboBuffers;
         std::unique_ptr<VkeDescriptorSetLayout> globalSetLayout;
         std::unique_ptr<VkeDescriptorSetLayout> shadowSetLayout;
         std::unique_ptr<VkeDescriptorSetLayout> materialSetLayout;

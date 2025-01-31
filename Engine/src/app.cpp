@@ -20,6 +20,7 @@
 #include <array>
 #include <chrono>
 #include <stdexcept>
+#include <iostream>
 
 namespace vke
 {
@@ -59,7 +60,13 @@ namespace vke
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        glm::vec3 direction{1.f, 1.f, 1.f};
+        // setup before render
+
+        auto sun = VkeGameObject::makePointLight(0.3f);
+        sun.color = glm::vec3(0, 1, 1);
+        sun.transform.translation = {0.f, -1.f, 1.f};
+        gameObjects.emplace(sun.getId(), std::move(sun));
+
         while (!vkeWindow.shouldClose())
         {
             glfwPollEvents();
@@ -90,14 +97,21 @@ namespace vke
                                     gameObjects};
                 // update
                 GlobalUbo ubo{};
+                ShadowUbo shadowUbo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                direction.x += 0.0001;
 
-                glm::mat4 lightViewProj = getLightViewProjection(ubo.dirLight, camera.getPosition(), 20.f );
+                // this should be automated. Stick to the current offset for now
+                // glm::vec3(-10.f, 10.f, -2.f) - roughly the position of clipping view
+                glm::mat4 lightViewProj = ShadowMapSystem::getLightViewProjection(glm::vec3(1.f, 2.f, 2.f), frameInfo.camera.getPosition() + glm::vec3(-10.f, 10.f, -2.f), 10.f, camera);
                 ubo.dirLight.lightViewProj = lightViewProj;
+                shadowUbo.lightViewProj = lightViewProj;
                 pointLightSystem.update(frameInfo, ubo);
+
+                shadowUboBuffers[frameIndex]->writeToBuffer(&shadowUbo);
+                shadowUboBuffers[frameIndex]->flush();
+
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
@@ -192,7 +206,7 @@ namespace vke
                               .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Shadow map
                               .build();
         shadowSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
-                              .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+                              .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT) // shadowmap UBO
                               .build();
         materialSetLayout = VkeDescriptorSetLayout::Builder(vkeDevice)
                                 .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // albedo
@@ -221,7 +235,7 @@ namespace vke
         shadowDescriptorSets = std::vector<VkDescriptorSet>(MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < shadowDescriptorSets.size(); i++)
         {
-            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            auto bufferInfo = shadowUboBuffers[i]->descriptorInfo(); // shadow UBO
             VkeDescriptorWriter(*shadowSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
                 .build(shadowDescriptorSets[i]);
@@ -246,6 +260,7 @@ namespace vke
     void App::createUBOBuffers()
     {
         uboBuffers = std::vector<std::unique_ptr<VkeBuffer>>(MAX_FRAMES_IN_FLIGHT);
+        shadowUboBuffers = std::vector<std::unique_ptr<VkeBuffer>>(MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < uboBuffers.size(); i++)
         {
             uboBuffers[i] = std::make_unique<VkeBuffer>(
@@ -254,6 +269,14 @@ namespace vke
                 1,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+            shadowUboBuffers[i] = std::make_unique<VkeBuffer>(
+                vkeDevice,
+                sizeof(ShadowUbo),
+                1,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+            shadowUboBuffers[i]->map();
             uboBuffers[i]->map();
         }
     }

@@ -29,8 +29,9 @@ To run:
 
 
 ## So far these are my milestones:
-### 0.19 Shadows(No Acne fix, No filtering), Windows build
-![VK](https://i.ibb.co/31brNwd/Screenshot-2025-01-20-at-23-26-36.png)
+### 0.20 Shadows with PCF + acne fix
+![VK](https://i.ibb.co/wNhhx4fN/Screenshot-2025-01-31-at-13-39-15.png)
+### 0.19.5 Shadows(No Acne fix), Windows build
 ### 0.18 Physically based rendering(PBR), directional light, Mouse Controller
 ![VK](https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png)
 ### 0.17 Multiple Texture loader, ObjManager, time in shaders

@@ -88,7 +88,8 @@ namespace vke
             assert(lightIndex < MAX_LIGHTS && "Exceeded max point lights");
 
             // update point light position
-            obj.transform.translation = glm::vec3(rotate * glm::vec4(obj.transform.translation, 1.f));
+            // obj.transform.translation = glm::vec3(rotate * glm::vec4(obj.transform.translation, 1.f));
+            obj.transform.translation = frameInfo.camera.getPosition()+glm::vec3(0.f,-2.f,0);
 
             // copy light to ubo
             ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
