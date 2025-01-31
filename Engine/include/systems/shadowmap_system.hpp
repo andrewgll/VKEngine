@@ -31,6 +31,7 @@ namespace vke
         ShadowMapSystem &operator=(const ShadowMapSystem &) = delete;
 
         void renderShadowMaps(FrameInfo &frameInfo, glm::mat4 &lightViewProj);
+        static glm::mat4 getLightViewProjection(const glm::vec3 &dirLightPos, const glm::vec3 &cameraPosition, float sceneRadius, VkeCamera &camera);
 
     private:
         void createPipelineLayout(VkDescriptorSetLayout &setLayout);

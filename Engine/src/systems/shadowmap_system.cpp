@@ -100,4 +100,16 @@ namespace vke
             obj.model->draw(frameInfo.commandBuffer);
         }
     }
+    glm::mat4 ShadowMapSystem::getLightViewProjection(const glm::vec3 &dirLightPos, const glm::vec3 &cameraPosition, float sceneRadius, VkeCamera &camera)
+    {
+        float zNear = 0.01f;
+        float zFar = 100.f;
+        float lightSize = sceneRadius * 2.f;
+        glm::vec3 lightTarget = cameraPosition;
+        glm::vec3 lightPosition = lightTarget - dirLightPos * sceneRadius;
+
+        glm::mat4 depthProjectionMatrix = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, zNear, zFar);
+        glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightTarget, glm::vec3(0, 1, 0));
+        return depthProjectionMatrix * depthViewMatrix;
+    }
 }

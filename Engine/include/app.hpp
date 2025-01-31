@@ -35,7 +35,6 @@ namespace vke
         void loadLights();
         void createDescriptors();
         void createUBOBuffers();
-        glm::mat4 getLightViewProjection(DirectionalLight &dirLight, const glm::vec3 &cameraPosition, float sceneRadius);
         VkeWindow vkeWindow{WIDTH,
                             HEIGHT,
                             "VKEngine v2"};
@@ -46,6 +45,7 @@ namespace vke
         VkeGameObject::Map gameObjects;
 
         std::vector<std::unique_ptr<VkeBuffer>> uboBuffers;
+        std::vector<std::unique_ptr<VkeBuffer>> shadowUboBuffers;
         std::unique_ptr<VkeDescriptorSetLayout> globalSetLayout;
         std::unique_ptr<VkeDescriptorSetLayout> shadowSetLayout;
         std::unique_ptr<VkeDescriptorSetLayout> materialSetLayout;

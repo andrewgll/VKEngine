@@ -91,11 +91,24 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 float shadowCalculation() {
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     vec2 uv = projCoords.xy * 0.5 + 0.5;
-    float z = projCoords.z*0.5+0.5;
-
+    float currentDepth = projCoords.z ;
     float depth = texture(shadowMap, uv).x; 
-    float bias = 0.005;
-    return z - bias > depth ? 0.2 : 1.0;
+
+    float bias = 0.0005;
+    float shadow = 0.0;
+
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, uv + vec2(x, y) * texelSize).r; 
+            shadow += (currentDepth - bias) < pcfDepth ? 1.0 : 0.2;        
+        }    
+    }
+    shadow /= 9.0;
+    
+    return shadow;
 }
 
 void main() {
@@ -169,5 +182,5 @@ void main() {
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     
-    outColor = vec4(color,1.0);
+    outColor = vec4(color, 1.0);
 }

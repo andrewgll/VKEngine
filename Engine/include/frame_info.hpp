@@ -20,11 +20,13 @@ namespace vke
     {
         glm::mat4 lightViewProj{1};
         // x z y
-        glm::vec3 direction{0.f, 1.f, 1.f};
+        glm::vec3 direction{1.f, 1.f, 2.f};
         alignas(16) glm::vec3 color{1.0f, 1.f, 0.4f};
         float intensity{1.f};
     };
-
+    struct ShadowUbo {
+        glm::mat4 lightViewProj{1};
+    };
     struct GlobalUbo
     {
         glm::mat4 projection{1.f};

@@ -168,10 +168,10 @@ namespace vke
 
         VkViewport viewport{};
         viewport.x = 0.0f;
-        viewport.y = 0.0f;
+        viewport.y = static_cast<float>(vkeSwapChain->getShadowMapExtent().height);
+        viewport.y = 0;
         viewport.width = static_cast<float>(vkeSwapChain->getShadowMapExtent().width);
         viewport.height = static_cast<float>(vkeSwapChain->getShadowMapExtent().height);
-        std::cout << "Shadow map extent: " << vkeSwapChain->getShadowMapExtent().width << " " << vkeSwapChain->getShadowMapExtent().height << std::endl;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor{{0, 0}, vkeSwapChain->getSwapChainExtent()};
