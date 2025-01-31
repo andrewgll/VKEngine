@@ -30,24 +30,34 @@ To run:
 
 ## So far these are my milestones:
 ### 0.20 Shadows with PCF + acne fix
-![VK](https://i.ibb.co/wNhhx4fN/Screenshot-2025-01-31-at-13-39-15.png)
+<img src="https://i.ibb.co/wNhhx4fN/Screenshot-2025-01-31-at-13-39-15.png" width="300px">
+
 ### 0.19.5 Shadows(No Acne fix), Windows build
+
 ### 0.18 Physically based rendering(PBR), directional light, Mouse Controller
-![VK](https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png)
+<img src="https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png" width="300px">
+
 ### 0.17 Multiple Texture loader, ObjManager, time in shaders
-![VK](https://i.ibb.co/ZMp7GP4/Screenshot-2025-01-07-at-13-11-29.png)
+<img src="https://i.ibb.co/ZMp7GP4/Screenshot-2025-01-07-at-13-11-29.png" width="300px">
+
 ### 0.16 specular lighting
+
 ### 0.15 point lights, uniform buffers, descriptor sets.
-![VK](https://i.ibb.co/G5gLdt8/Screenshot-2024-12-31-at-11-01-59.png)
+<img src="https://i.ibb.co/G5gLdt8/Screenshot-2024-12-31-at-11-01-59.png" width="300px">
+
 ### 0.14 Custom model upload + lighting.
-![VK](https://i.ibb.co/mJ4YHTk/Screenshot-2024-12-29-at-09-46-27.png)
+<img src="https://i.ibb.co/mJ4YHTk/Screenshot-2024-12-29-at-09-46-27.png" width="300px">
+
 ### 0.13 WASD movement.
+
 ### 0.12 Camera View Transformation.
-![VK](https://i.ibb.co/ZVBhT9z/Screenshot-2024-12-27-at-10-36-14.png)
+<img src="https://i.ibb.co/ZVBhT9z/Screenshot-2024-12-27-at-10-36-14.png" width="300px">
 
 ### 0.11 Perspective Projection.
+
 ### 0.1 finally 3D.
-![VK](https://i.ibb.co/BySfjdN/Screenshot-2024-12-26-at-22-09-28.png)
+<img src="https://i.ibb.co/BySfjdN/Screenshot-2024-12-26-at-22-09-28.png" width="300px">
+
 
 ### 0.09 Refactored everything.
 ### 0.08 Render system.
