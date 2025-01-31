@@ -29,10 +29,10 @@ To run:
 
 
 ## So far these are my milestones:
-### 0.20 Shadows with PCF + acne fix
+### 0.19 Shadows with PCF + acne fix
 <img src="https://i.ibb.co/wNhhx4fN/Screenshot-2025-01-31-at-13-39-15.png" width="300px">
 
-### 0.19.5 Shadows(No Acne fix), Windows build
+### 0.18.5 Shadows(No Acne fix), Windows build
 
 ### 0.18 Physically based rendering(PBR), directional light, Mouse Controller
 <img src="https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png" width="300px">
