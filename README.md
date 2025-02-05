@@ -2,6 +2,8 @@ Hi. This is my attempt to learn Vulkan and write my own small engine from scratc
 
 The Engine uses these conventions: Z forward, -Y up, triangulate faces.
 
+Windows is not supported for now. (You can manually install everything and change Makefile if you want to)
+
 Dependencies you need to build this engine:
 * [VulkanSDK](https://vulkan.lunarg.com/sdk/home)
 * [GLFW](https://www.glfw.org/)
@@ -11,28 +13,30 @@ Dependencies you need to build this engine:
 * [stb image loader](https://github.com/nothings/stb/blob/master/stb_image.h)
 * GLSLC(Should be included with VulkanSDK)
 
-For now Makefile is compatible only with MacOS and homebrew(Support for windows will be added later).
 ## How to build:
 ```sh
-run install.sh or install.bat script to download all dependencies
-
+chmod +x ./install.sh
+./install.sh
 make
 ``` 
-for debug build:
-```sh
-make debug
-```
 To run:
 ```sh
 ./bin/app
 ```
 
+## Shortcuts
+Press k to access to cursor
+
 
 ## So far these are my milestones:
+
+### 0.20.1 UI system added (ImGui) 
+<img src="https://i.ibb.co/XfpCp2NG/Screenshot-2025-02-04-at-19-13-49.png" width="300px">
+
 ### 0.19 Shadows with PCF + acne fix
 <img src="https://i.ibb.co/wNhhx4fN/Screenshot-2025-01-31-at-13-39-15.png" width="300px">
 
-### 0.18.5 Shadows(No Acne fix), Windows build
+### 0.18.5 Shadows(No Acne fix)
 
 ### 0.18 Physically based rendering(PBR), directional light, Mouse Controller
 <img src="https://i.ibb.co/kcXntVg/Screenshot-2025-01-09-at-10-12-59.png" width="300px">

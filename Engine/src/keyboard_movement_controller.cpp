@@ -2,35 +2,63 @@
 
 namespace vke
 {
+    void KeyboardMovementController::updateShortcuts(GLFWwindow *window)
+    {
+        static bool keyPressed = false;
+
+        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        {
+            if (!keyPressed)
+            {
+                cursorEnabled = !cursorEnabled;
+                if (cursorEnabled)
+                {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                }
+                else
+                {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                }
+
+                keyPressed = true;
+            }
+        }
+        else
+        {
+            keyPressed = false;
+        }
+    }
     void KeyboardMovementController::moveInPlainXZ(GLFWwindow *window, float dt, VkeGameObject &gameObject)
     {
-        static bool firstMouse = true;
-        static double lastX, lastY;
-
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-
-        if (firstMouse)
+        if (!cursorEnabled)
         {
+            static bool firstMouse = true;
+            static double lastX, lastY;
+
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            if (firstMouse)
+            {
+                lastX = xpos;
+                lastY = ypos;
+                firstMouse = false;
+            }
+
+            double xoffset = xpos - lastX;
+            double yoffset = lastY - ypos;
             lastX = xpos;
             lastY = ypos;
-            firstMouse = false;
+
+            float sensitivity = 0.05f;
+            xoffset *= sensitivity;
+            yoffset *= sensitivity;
+
+            gameObject.transform.rotation.y += static_cast<float>(xoffset) * lookSpeed * dt;
+            gameObject.transform.rotation.x += static_cast<float>(yoffset) * lookSpeed * dt;
+
+            gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
+            gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
         }
-
-        double xoffset = xpos - lastX;
-        double yoffset = lastY - ypos;
-        lastX = xpos;
-        lastY = ypos;
-
-        float sensitivity = 0.05f;
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
-
-        gameObject.transform.rotation.y += static_cast<float>(xoffset) * lookSpeed * dt;
-        gameObject.transform.rotation.x += static_cast<float>(yoffset) * lookSpeed * dt;
-
-        gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
-        gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
 
         float yaw = gameObject.transform.rotation.y;
         const glm::vec3 forwardDir{sin(yaw), 0.f, cos(yaw)};
@@ -56,4 +84,5 @@ namespace vke
             gameObject.transform.translation += glm::normalize(moveDir) * moveSpeed * dt;
         }
     }
+
 } // namespace vke

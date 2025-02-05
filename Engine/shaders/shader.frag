@@ -88,25 +88,35 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-float shadowCalculation() {
+// pseudo random number generator
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+// PCF
+float shadowCalculation(vec3 normal, vec3 lightDir) {
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     vec2 uv = projCoords.xy * 0.5 + 0.5;
     float currentDepth = projCoords.z ;
     float depth = texture(shadowMap, uv).x; 
 
-    float bias = 0.0005;
+    float bias = max(0.0002 * (1.0 - dot(normal, lightDir)), 0.00001);
+
     float shadow = 0.0;
 
+    int kernelSize = 2;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
+    for(int x = -kernelSize; x <= kernelSize; ++x)
     {
-        for(int y = -1; y <= 1; ++y)
+        for(int y = -kernelSize; y <= kernelSize; ++y)
         {
-            float pcfDepth = texture(shadowMap, uv + vec2(x, y) * texelSize).r; 
-            shadow += (currentDepth - bias) < pcfDepth ? 1.0 : 0.2;        
+            vec2 randomOffset = vec2(rand(uv + vec2(x, y)), rand(uv - vec2(x, y))) * texelSize;
+
+            float pcfDepth = texture(shadowMap, uv + vec2(x, y) * texelSize + randomOffset).r; 
+            shadow += (currentDepth - bias) < pcfDepth ? 1.0 : 0.1;        
         }    
     }
-    shadow /= 9.0;
+    shadow /= (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
     
     return shadow;
 }
@@ -120,7 +130,7 @@ void main() {
     vec3 N = normalize(getNormal());
     vec3 V = normalize(ubo.invView[3].xyz - fragPosWorld);
 
-    vec3 F0 = vec3(0.04); // Default dielectric reflectance
+    vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 
     vec3 Lo = vec3(0.0);
@@ -150,8 +160,7 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
-    // Calculate Directional Light Contribution
-    vec3 L_dir = normalize(-ubo.dirLight.direction); // Light direction (towards light)
+    vec3 L_dir = normalize(-ubo.dirLight.direction);
     vec3 H_dir = normalize(V + L_dir);
     vec3 radiance_dir = ubo.dirLight.color * ubo.dirLight.intensity;
 
@@ -169,8 +178,9 @@ void main() {
 
     float NdotL_dir = max(dot(N, L_dir), 0.0);
     Lo += (kD_dir * albedo / PI + specular_dir) * radiance_dir * NdotL_dir;
+    
+    float shadow = shadowCalculation(N, ubo.dirLight.direction);
 
-    float shadow = shadowCalculation();
 
     Lo = clamp(Lo, vec3(0.0), vec3(10.0)); 
 

@@ -51,6 +51,7 @@ namespace vke
     class VkeDescriptorPool
     {
     public:
+        VkDescriptorPool getDescriptorPool() const { return descriptorPool; }
         class Builder
         {
         public:

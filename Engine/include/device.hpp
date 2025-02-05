@@ -54,6 +54,7 @@ namespace vke
     SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
+    VkInstance getInstance() { return instance; }
     VkFormat findSupportedFormat(
         const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 

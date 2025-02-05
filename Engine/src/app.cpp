@@ -5,10 +5,16 @@
 #include "systems/render_system.hpp"
 #include "systems/point_light_system.hpp"
 #include "systems/shadowmap_system.hpp"
+#include "systems/ui_system.hpp"
 #include "buffer.hpp"
 #include "object_manager.hpp"
 #include "light_object.hpp"
 #include "texture_sampler.hpp"
+
+// ImGui
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_vulkan.h"
 
 // libs
 #define GLM_FORCE_RADIANT
@@ -49,6 +55,7 @@ namespace vke
             globalSetLayout->getDescriptorSetLayout(),
             materialSetLayout->getDescriptorSetLayout()};
 
+        UISystem uiSystem{vkeWindow, vkeDevice, *globalPool, vkeRenderer};
         RenderSystem renderSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), setLayouts};
         PointLightSystem pointLightSystem{vkeDevice, vkeRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
         ShadowMapSystem shadowMapSystem{vkeDevice, vkeRenderer.getShadowMapRenderPass(), shadowSetLayout->getDescriptorSetLayout(), {SHADOWMAP_DIM, SHADOWMAP_DIM}};
@@ -63,9 +70,10 @@ namespace vke
         // setup before render
 
         auto sun = VkeGameObject::makePointLight(0.3f);
-        sun.color = glm::vec3(0, 1, 1);
-        sun.transform.translation = {0.f, -1.f, 1.f};
+        sun.color = glm::vec3(1, 1, 0.5);
+        sun.transform.translation = glm::vec3(1.f, 2.f, 2.f);
         gameObjects.emplace(sun.getId(), std::move(sun));
+        auto cameraOffset = glm::vec3(-10.f, 10.f, -2.f);
 
         while (!vkeWindow.shouldClose())
         {
@@ -78,6 +86,7 @@ namespace vke
             frameTime = glm::min(frameTime, MAX_FRAME_TIME);
 
             cameraController.moveInPlainXZ(vkeWindow.getGLWFWindow(), frameTime, viewerObject);
+            cameraController.updateShortcuts(vkeWindow.getGLWFWindow());
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = vkeRenderer.getAspectRatio();
@@ -95,6 +104,7 @@ namespace vke
                                     globalDescriptorSets[frameIndex],
                                     shadowDescriptorSets[frameIndex],
                                     gameObjects};
+
                 // update
                 GlobalUbo ubo{};
                 ShadowUbo shadowUbo{};
@@ -102,11 +112,12 @@ namespace vke
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
 
-                // this should be automated. Stick to the current offset for now
-                // glm::vec3(-10.f, 10.f, -2.f) - roughly the position of clipping view
-                glm::mat4 lightViewProj = ShadowMapSystem::getLightViewProjection(glm::vec3(1.f, 2.f, 2.f), frameInfo.camera.getPosition() + glm::vec3(-10.f, 10.f, -2.f), 10.f, camera);
+                glm::mat4 lightViewProj = ShadowMapSystem::getLightViewProjection(sun.transform.translation, frameInfo.camera.getPosition() + cameraOffset, 10.f, camera);
                 ubo.dirLight.lightViewProj = lightViewProj;
+                ubo.dirLight.color = sun.color;
+                ubo.dirLight.direction = sun.transform.translation;
                 shadowUbo.lightViewProj = lightViewProj;
+
                 pointLightSystem.update(frameInfo, ubo);
 
                 shadowUboBuffers[frameIndex]->writeToBuffer(&shadowUbo);
@@ -122,6 +133,7 @@ namespace vke
                 vkeRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
+                renderImGuiFrame(commandBuffer, sun, cameraOffset);
                 vkeRenderer.endSwapChainRenderPass(commandBuffer);
                 vkeRenderer.endFrame();
             }
@@ -280,5 +292,29 @@ namespace vke
             uboBuffers[i]->map();
         }
     }
+    void App::renderImGuiFrame(VkCommandBuffer commandBuffer, VkeGameObject &sun, glm::vec3 &cameraOffset)
+    {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
+        ImGui::Begin("Sun Control");
+        ImGui::SliderFloat("Sun X", &sun.transform.translation.x, -10.0f, 10.0f);
+        ImGui::SliderFloat("Sun Y", &sun.transform.translation.y, -10.0f, 10.0f);
+        ImGui::SliderFloat("Sun Z", &sun.transform.translation.z, -10.0f, 10.0f);
+
+        ImGui::SliderFloat("Camera Offset X", &cameraOffset.x, -100.0f, 100.0f);
+        ImGui::SliderFloat("Camera Offset Y", &cameraOffset.y, -100.0f, 100.0f);
+        ImGui::SliderFloat("Camera Offset Z", &cameraOffset.z, -100.0f, 100.0f);
+
+        ImGui::SliderFloat("Sun Color R", &sun.color.r, 0.0f, 1.0f);
+        ImGui::SliderFloat("Sun Color G", &sun.color.g, 0.0f, 1.0f);
+        ImGui::SliderFloat("Sun Color B", &sun.color.b, 0.0f, 1.0f);
+
+        ImGui::End();
+
+        ImGui::Render();
+
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+    }
 }
