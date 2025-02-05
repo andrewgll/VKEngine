@@ -35,9 +35,10 @@ namespace vke
         void loadLights();
         void createDescriptors();
         void createUBOBuffers();
-        VkeWindow vkeWindow{WIDTH,
-                            HEIGHT,
-                            "VKEngine v2"};
+        void renderImGuiFrame(VkCommandBuffer commandBuffer, VkeGameObject &sun, glm::vec3 &cameraOffset);
+            VkeWindow vkeWindow { WIDTH,
+                                  HEIGHT,
+                                  "VKEngine v2" };
         VkeDevice vkeDevice{vkeWindow};
         VkeRenderer vkeRenderer{vkeWindow, vkeDevice};
 

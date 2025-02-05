@@ -25,9 +25,11 @@ namespace vke
 
         // depends on the GLFW...
         void moveInPlainXZ(GLFWwindow *window, float dt, VkeGameObject &gameObject);
-
+        void updateShortcuts(GLFWwindow *window);
         KeyMappings keys{};
         float moveSpeed{3.f};
         float lookSpeed{1.5f};
+        bool cursorEnabled{false};
+        double xpos, ypos;
     };
 } // namespace vke
